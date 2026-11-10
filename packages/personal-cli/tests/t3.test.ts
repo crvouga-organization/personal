@@ -219,9 +219,6 @@ test('managed agent instances never carry a real credential or unknown field', a
     (d: Definition) =>
       (d.instances.personal_antigravity_proxy.config.apiKey = 'AIza-real'),
     (d: Definition) =>
-      (d.instances.personal_antigravity_proxy.config.authMethod =
-        'oauth-personal'),
-    (d: Definition) =>
       (d.instances.personal_grok_proxy.environment[1]!.value = 'xai-real'),
     (d: Definition) =>
       (d.instances.personal_cursor.config.apiEndpoint = 'https://x'),

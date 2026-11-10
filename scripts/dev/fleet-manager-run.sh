@@ -31,6 +31,10 @@ fi
 touch "$dir"
 cd "$dir"
 mise trust --quiet "$dir/mise.toml" >/dev/null 2>&1 || true
+# The manager runs the same locked toolchain (and so the same agent versions)
+# as every worker: publish this revision's global config and install it. Warm
+# runs only re-check installed tools.
+mise exec --locked bun -- bun scripts/dev/setup.ts --tools-only >&2 || { say 'shared toolchain install failed in the run checkout.'; exit 5; }
 # Frozen install; near-instant when this checkout is already warm.
 mise exec --locked bun -- bun install --frozen-lockfile --silent >&2 || { say 'frozen dependency install failed in the run checkout.'; exit 5; }
 # Keep the three most recent run checkouts (names are commit SHAs).

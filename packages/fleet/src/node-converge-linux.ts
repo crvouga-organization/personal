@@ -8,7 +8,10 @@ import { verifyUbuntuBoot } from '../../workstation/cli/lib/platform/ubuntu-veri
 import { verifyResourceSafety } from '../../workstation/cli/lib/platform/resource-verify';
 import { convergeT3Route } from '../../workstation/cli/lib/platform/t3-route';
 import { convergeProxy } from './proxy-converge';
-import { verifyFleetProviders } from '../../workstation/cli/lib/agents/fleet-verify';
+import {
+  quotaLimited,
+  verifyFleetProviders,
+} from '../../workstation/cli/lib/agents/fleet-verify';
 import { verifyNativeAgents } from '../../workstation/cli/lib/agents/native-verify';
 import { managedT3, managedT3Desktop } from '../../../scripts/dev/native-t3';
 import { convergeT3Service } from '../../workstation/cli/lib/platform/t3-service';
@@ -70,14 +73,13 @@ export async function convergeLinux(
       convergeProxy(node, revision, run)
     ))
   );
-  checks.push(
-    ...(await attempt('provider:verification', () =>
-      verifyFleetProviders(node)
-    ))
+  const providers = await attempt('provider:verification', () =>
+    verifyFleetProviders(node)
   );
+  checks.push(...providers);
   checks.push(
     ...(await attempt('agent:verification', () =>
-      verifyNativeAgents(node, root, run)
+      verifyNativeAgents(node, root, run, quotaLimited(providers))
     ))
   );
   checks.push(

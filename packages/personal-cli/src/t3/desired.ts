@@ -82,8 +82,9 @@ function expand(value: unknown, variables: Record<string, string>): unknown {
 }
 
 /** Each managed driver accepts only the adapter fields fleet sets. Credentials
- * never appear here: wrappers read them from Vault at launch. The values
- * `fleet-cli-proxy` are non-secret placeholders that select a sign-in method.
+ * never appear here (T3 refuses a managed policy that holds one): wrappers read
+ * them from Vault at launch. `fleet-cli-proxy` is a non-secret placeholder that
+ * selects Grok's API-key sign-in.
  */
 const DRIVERS: Record<
   string,
@@ -94,7 +95,7 @@ const DRIVERS: Record<
   claudeAgent: { required: ['binaryPath', 'homePath'] },
   grok: { required: ['binaryPath'], env: ['XAI_API_KEY'] },
   cursor: { required: ['binaryPath'] },
-  antigravity: { required: ['binaryPath', 'authMethod', 'apiKey'] },
+  antigravity: { required: ['binaryPath'] },
 };
 const PLACEHOLDER = 'fleet-cli-proxy';
 
@@ -128,10 +129,7 @@ function validConfig(
   const allowed = [...driver.required, ...(driver.optional ?? [])];
   return (
     Object.keys(config).every((key) => allowed.includes(key)) &&
-    driver.required.every((key) => typeof config[key] === 'string') &&
-    (config['authMethod'] === undefined ||
-      config['authMethod'] === 'gemini-api-key') &&
-    (config['apiKey'] === undefined || config['apiKey'] === PLACEHOLDER)
+    driver.required.every((key) => typeof config[key] === 'string')
   );
 }
 

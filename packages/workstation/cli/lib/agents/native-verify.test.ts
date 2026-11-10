@@ -108,3 +108,73 @@ test('a drifted binary is reinstalled from the lock, then passes', async () => {
     calls.filter((args) => args[0] === 'mise').map((args) => args.at(-1))
   ).toEqual([`http:antigravity@${pins['http:antigravity']}`]);
 });
+
+test('only a browser sign-in authenticate request becomes the API-key method', async () => {
+  const { rewriteAuthenticate } = await import('./launch');
+  const request = (methodId: string) =>
+    JSON.stringify({
+      jsonrpc: '2.0',
+      id: 3,
+      method: 'authenticate',
+      params: { methodId },
+    });
+  expect(JSON.parse(rewriteAuthenticate(request('oauth-personal')))).toEqual({
+    jsonrpc: '2.0',
+    id: 3,
+    method: 'authenticate',
+    params: { methodId: 'gemini-api-key' },
+  });
+  expect(rewriteAuthenticate(request('agent-platform'))).toBe(
+    request('agent-platform')
+  );
+  const prompt = JSON.stringify({
+    method: 'session/prompt',
+    params: { text: '"authenticate"' },
+  });
+  expect(rewriteAuthenticate(prompt)).toBe(prompt);
+  expect(rewriteAuthenticate('not json "authenticate"')).toBe(
+    'not json "authenticate"'
+  );
+});
+
+test('an account out of quota passes quietly without launching its session', async () => {
+  const pins = parsePins(
+    await readFile(resolve(workspace, 'mise.toml'), 'utf8')
+  );
+  const { run, calls } = fake((args) => {
+    if (args[1] === '--version') {
+      const agent = NATIVE_AGENTS.find((a) => a.binary === args[0])!;
+      return { ok: true, stdout: `v ${pins[agent.pin]}` };
+    }
+    return { ok: true, stdout: args.includes('models') ? 'auto' : 'OK' };
+  });
+  const checks = await verifyNativeAgents(
+    'node-a',
+    workspace,
+    run,
+    new Set(['codex'])
+  );
+  expect(checks.every((check) => check.status === 'pass')).toBe(true);
+  expect(calls.some((args) => args[1]?.endsWith('codex-proxy.ts'))).toBe(false);
+});
+
+test('a first-launch failure is retried once', async () => {
+  const pins = parsePins(
+    await readFile(resolve(workspace, 'mise.toml'), 'utf8')
+  );
+  let grokRuns = 0;
+  const { run } = fake((args) => {
+    if (args[1] === '--version') {
+      const agent = NATIVE_AGENTS.find((a) => a.binary === args[0])!;
+      return { ok: true, stdout: `v ${pins[agent.pin]}` };
+    }
+    if (args[1]?.endsWith('grok-proxy.ts'))
+      return { ok: ++grokRuns > 1, stdout: grokRuns > 1 ? 'OK' : '' };
+    return { ok: true, stdout: args.includes('models') ? 'auto' : 'OK' };
+  });
+  const checks = await verifyNativeAgents('node-a', workspace, run);
+  expect(checks.find((c) => c.id === 'agent:grok:session')?.status).toBe(
+    'pass'
+  );
+  expect(grokRuns).toBe(2);
+});

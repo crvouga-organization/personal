@@ -5,11 +5,16 @@
  */
 import { cursorKey } from '../cli/lib/agents/secrets';
 import { AgentConfigurationError } from '../cli/lib/agents/errors';
+import { pinnedPath } from '../cli/lib/agents/toolchain';
 
 const args = process.argv.slice(2);
 const env: Record<string, string | undefined> = {
   ...process.env,
   CURSOR_INVOKED_AS: 'cursor-agent',
+  PATH: pinnedPath(),
+  // The key arrives on every launch; never persist it (and never touch the
+  // macOS keychain, which is locked in SSH and service sessions).
+  AGENT_CLI_CREDENTIAL_STORE: 'memory',
 };
 try {
   // Version probes need no credentials.

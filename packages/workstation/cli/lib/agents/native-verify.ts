@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Check, Runner } from '../../../../fleet/src/types';
 import { CURSOR_KEY } from './secrets';
+import { pinnedPath } from './toolchain';
 
 const PROMPT = 'Reply with exactly: OK';
 
@@ -73,7 +74,9 @@ type Agent = (typeof NATIVE_AGENTS)[number];
 export async function verifyNativeAgents(
   node: string,
   workspace: string,
-  run: Runner
+  run: Runner,
+  /** Proxy routes already found out of quota; their sessions are not run. */
+  outOfQuota: Set<string> = new Set()
 ): Promise<Check[]> {
   const pins = parsePins(await readFile(join(workspace, 'mise.toml'), 'utf8'));
   const cwd = await mkdtemp(join(tmpdir(), 'fleet-agents-'));
@@ -81,7 +84,9 @@ export async function verifyNativeAgents(
     const results = await Promise.all(
       NATIVE_AGENTS.map(async (agent) => [
         await versionCheck(agent, pins[agent.pin], run),
-        await sessionCheck(agent, { node, workspace, cwd }, run),
+        outOfQuota.has(agent.name)
+          ? quotaPass(agent)
+          : await sessionCheck(agent, { node, workspace, cwd }, run),
       ])
     );
     return results.flat();
@@ -110,6 +115,7 @@ async function versionCheck(
 ): Promise<Check> {
   const matches = async () => {
     const result = await run([agent.binary, '--version'], {
+      env: { PATH: pinnedPath() },
       timeoutMs: 30_000,
     });
     return Boolean(pin) && result.ok && result.stdout.includes(pin!);
@@ -140,25 +146,38 @@ async function versionCheck(
   };
 }
 
+/** Quota is the account's, not the node's: no warning (as for providers). */
+function quotaPass(agent: Agent): Check {
+  return {
+    id: `agent:${agent.name}:session`,
+    status: 'pass',
+    summary: `The shared ${agent.name} account is rate limited or out of quota; its session is checked again once it recovers.`,
+  };
+}
+
 async function sessionCheck(
   agent: Agent,
   context: { node: string; workspace: string; cwd: string },
   run: Runner
 ): Promise<Check> {
-  const result = await run(
-    [
-      'bun',
-      join(context.workspace, 'packages/workstation/agents', agent.wrapper),
-      ...agent.args,
-    ],
-    {
-      cwd: context.cwd,
-      env: { WS_AGENT_NODE: context.node },
-      input: '',
-      timeoutMs: 150_000,
-    }
-  );
+  const launch = () =>
+    run(
+      [
+        'bun',
+        join(context.workspace, 'packages/workstation/agents', agent.wrapper),
+        ...agent.args,
+      ],
+      {
+        cwd: context.cwd,
+        env: { WS_AGENT_NODE: context.node, PATH: pinnedPath() },
+        input: '',
+        timeoutMs: 150_000,
+      }
+    );
   const expected = 'expect' in agent ? agent.expect : /\bOK\b/;
+  let result = await launch();
+  // One retry: a CLI's first launch on a node may still be initializing.
+  if (!(result.ok && expected.test(result.stdout))) result = await launch();
   const ok = result.ok && expected.test(result.stdout);
   return {
     id: `agent:${agent.name}:session`,

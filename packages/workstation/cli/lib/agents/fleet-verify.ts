@@ -64,6 +64,18 @@ async function verifyRoute(
  * recovers on its own. They are not reported at all (a quiet pass).
  */
 const QUOTA = new Set(['PROVIDER_RATE_LIMITED']);
+/** Summary of the quiet pass; native session checks skip these accounts. */
+export const QUOTA_SUMMARY =
+  'Gateway authenticated and routed the request; the provider account is rate limited or out of quota and recovers on its own.';
+
+/** Proxy routes whose provider account is out of quota in these checks. */
+export function quotaLimited(checks: Check[]): Set<string> {
+  return new Set(
+    checks
+      .filter((check) => check.summary === QUOTA_SUMMARY)
+      .map((check) => check.id.split(':')[1]!)
+  );
+}
 
 /** Other conditions owned by the upstream provider account (outage, billing)
  * do not mean this node is misconfigured: the gateway answered and routed the
@@ -83,8 +95,7 @@ export function inferenceFailure(provider: string, code: string): Check {
     return {
       id: `provider:${provider}:inference`,
       status: 'pass',
-      summary:
-        'Gateway authenticated and routed the request; the provider account is rate limited or out of quota and recovers on its own.',
+      summary: QUOTA_SUMMARY,
     };
   const upstream = UPSTREAM[code];
   return {

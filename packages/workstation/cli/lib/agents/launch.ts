@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { registry, type Selection } from './registry';
 import { proxyKey } from './secrets';
+import { pinnedPath } from './toolchain';
 
 export async function launchProfile(
   root: string,
@@ -14,6 +15,7 @@ export async function launchProfile(
     selection.profile
   );
   const env = { ...process.env };
+  env['PATH'] = pinnedPath(env);
   // Do not allow an ambient gateway to silently change the selected route.
   for (const name of [
     'OPENAI_BASE_URL',
@@ -33,6 +35,28 @@ export async function launchProfile(
     env['CLIPROXY_API_KEY'] = await proxyKey();
     configureGatewayEnvironment(env, selection);
   }
+  toolEnvironment(env, selection, directory);
+  const command = [
+    selection.tool,
+    ...launchArgs(selection, directory, args, env),
+  ];
+  if (selection.tool === 'antigravity' && args[0] === 'acp')
+    return relayAcp(command, env);
+  const child = Bun.spawn(command, {
+    env,
+    stdin: 'inherit',
+    stdout: 'inherit',
+    stderr: 'inherit',
+  });
+  return child.exited;
+}
+
+/** Per-tool profile selection and self-updater switches. */
+function toolEnvironment(
+  env: NodeJS.ProcessEnv,
+  selection: Selection,
+  directory: string
+): void {
   if (selection.tool === 'claude') env['DISABLE_AUTOUPDATER'] = '1';
   if (selection.tool === 'codex') env['CODEX_HOME'] = directory;
   if (selection.tool === 'opencode')
@@ -42,19 +66,68 @@ export async function launchProfile(
     env['GROK_HOME'] = directory;
     env['GROK_DISABLE_AUTOUPDATER'] = '1';
   }
+  // Only "true" disables Antigravity's in-place self-updater ("1" is ignored).
   if (selection.tool === 'antigravity')
-    // Only "true" disables Antigravity's in-place self-updater ("1" is ignored).
     env['AGY_CLI_DISABLE_AUTO_UPDATE'] = 'true';
-  const child = Bun.spawn(
-    [selection.tool, ...launchArgs(selection, directory, args, env)],
-    {
-      env,
-      stdin: 'inherit',
-      stdout: 'inherit',
-      stderr: 'inherit',
+}
+
+/** T3's managed policy may not carry a credential, so its Antigravity
+ * instance keeps the default Google sign-in method. The proxy key is the
+ * credential here: the one ACP `authenticate` request is switched to the
+ * Gemini API-key method on its way in; every other message passes unchanged.
+ */
+async function relayAcp(
+  command: string[],
+  env: NodeJS.ProcessEnv
+): Promise<number> {
+  const child = Bun.spawn(command, {
+    env,
+    stdin: 'pipe',
+    stdout: 'inherit',
+    stderr: 'inherit',
+  });
+  void (async () => {
+    let pending = '';
+    for await (const chunk of process.stdin) {
+      pending += String(chunk);
+      let end = pending.indexOf('\n');
+      while (end >= 0) {
+        void child.stdin.write(
+          rewriteAuthenticate(pending.slice(0, end)) + '\n'
+        );
+        pending = pending.slice(end + 1);
+        end = pending.indexOf('\n');
+      }
+      void child.stdin.flush();
     }
-  );
+    if (pending) void child.stdin.write(rewriteAuthenticate(pending));
+    void child.stdin.end();
+  })();
   return child.exited;
+}
+
+const BROWSER_SIGN_IN = new Set(['oauth-personal', 'oauth-business']);
+
+/** Rewrites only an ACP `authenticate` request for a browser sign-in method. */
+export function rewriteAuthenticate(line: string): string {
+  if (!line.includes('"authenticate"')) return line;
+  try {
+    const message = JSON.parse(line) as {
+      method?: unknown;
+      params?: { methodId?: unknown };
+    };
+    if (
+      message.method !== 'authenticate' ||
+      !BROWSER_SIGN_IN.has(String(message.params?.methodId))
+    )
+      return line;
+    return JSON.stringify({
+      ...message,
+      params: { ...message.params, methodId: 'gemini-api-key' },
+    });
+  } catch {
+    return line;
+  }
 }
 
 /** Tool-specific arguments that select the rendered profile. */

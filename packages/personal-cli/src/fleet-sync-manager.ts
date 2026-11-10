@@ -4,7 +4,10 @@ import type { ManagerNode } from '../../fleet/src/manager-sync';
 import { hostId } from '../../fleet/src/topology';
 import { convergeProxy } from '../../fleet/src/proxy-converge';
 import { attempt } from '../../fleet/src/node-converge-shared';
-import { verifyFleetProviders } from '../../workstation/cli/lib/agents/fleet-verify';
+import {
+  quotaLimited,
+  verifyFleetProviders,
+} from '../../workstation/cli/lib/agents/fleet-verify';
 import { verifyNativeAgents } from '../../workstation/cli/lib/agents/native-verify';
 import { convergeManagerHub } from '../../workstation/cli/lib/monitoring/manager-hub';
 import { enrollManagerMonitoring } from './fleet-sync-monitoring';
@@ -42,15 +45,14 @@ export async function convergeManager(
           managerAgentProfiles(id, input.workspace, run)
         ))
       );
-      checks.push(
-        ...(await attempt('provider:verification', () =>
-          verifyFleetProviders(id)
-        ))
+      const providers = await attempt('provider:verification', () =>
+        verifyFleetProviders(id)
       );
+      checks.push(...providers);
       // Same agents, versions and shared accounts as every worker.
       checks.push(
         ...(await attempt('agent:verification', () =>
-          verifyNativeAgents(id, input.workspace, run)
+          verifyNativeAgents(id, input.workspace, run, quotaLimited(providers))
         ))
       );
     }

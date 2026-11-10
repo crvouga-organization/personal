@@ -73,9 +73,7 @@
       "displayName": "Antigravity (CLI Proxy)",
       "enabled": true,
       "config": {
-        "binaryPath": "${workspace}/packages/workstation/agents/antigravity-proxy.ts",
-        "authMethod": "gemini-api-key",
-        "apiKey": "fleet-cli-proxy"
+        "binaryPath": "${workspace}/packages/workstation/agents/antigravity-proxy.ts"
       },
       "environment": [
         {
