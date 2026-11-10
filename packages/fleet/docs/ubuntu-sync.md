@@ -264,35 +264,45 @@ requires fencing the old host before restoring state
 
 Every node (manager and workers) offers the same agents in T3, at the same
 versions (pinned in `mise.toml`/`mise.lock`, including the vendor CLIs
-`http:cursor-agent`, `http:grok` and `http:antigravity`), signed in to the same
-accounts. T3 launches each one through a tracked wrapper in
-`packages/workstation/agents/` that injects the shared credential from Vault at
-launch; no login, token or key is copied between nodes or written to disk.
+`http:grok` and `http:antigravity`), signed in to the same multiplexed proxy
+accounts. T3 launches most through a tracked launcher in
+`packages/workstation/agents/` that injects the shared proxy key from Vault at
+launch; nothing is copied between nodes.
 
-| Agent       | T3 driver     | Route                                                              |
-| ----------- | ------------- | ------------------------------------------------------------------ |
-| Claude      | `claudeAgent` | CLI proxy (`claude-proxy.ts`)                                      |
-| Codex       | `codex`       | CLI proxy (`codex-proxy.ts`)                                       |
-| Grok        | `grok`        | CLI proxy: Grok Build custom model, `env_key` (`grok-proxy.ts`)    |
-| Antigravity | `antigravity` | CLI proxy: Gemini API-key mode (`antigravity-proxy.ts`)            |
-| Muse        | `opencode`    | CLI proxy via OpenCode (`opencode-proxy.ts`)                       |
-| Cursor      | `cursor`      | One shared Cursor account: Vault `CURSOR_API_KEY` (no proxy route) |
+| Agent       | T3 driver     | Route                                                                 |
+| ----------- | ------------- | --------------------------------------------------------------------- |
+| Claude      | `claudeAgent` | CLI proxy (`claude-proxy`, an extension-less launcher for the SDK)    |
+| Codex       | `codex`       | CLI proxy (`codex-proxy.ts`)                                          |
+| Grok        | `grok`        | CLI proxy: Grok Build custom model, `env_key` (`grok-proxy.ts`)       |
+| Antigravity | `antigravity` | CLI proxy: T3's own pinned runtime in Gemini API-key mode (see below) |
+| Muse        | `opencode`    | CLI proxy via OpenCode (`opencode-proxy.ts`)                          |
 
 The CLI proxy multiplexes the provider accounts (fill-first), so every node
-shares them. Cursor's backend cannot be proxied; its shared key is an optional
-OpenTofu vault input until set, and fleet reports `AGENT_CURSOR_KEY_REQUIRED`
-until then. Native Muse Code is not used: it only talks to Meta's own catalog
-endpoint, so Muse models run through OpenCode. Antigravity sends its catalog
+shares them. Cursor is not part of the fleet (its backend cannot be proxied).
+Native Muse Code is not used: it only talks to Meta's own catalog endpoint, so
+Muse models run through OpenCode.
+
+T3 runs Antigravity with its own pinned runtime (the same on every node for the
+same T3 release), not the `antigravity` CLI. A managed policy may not hold a
+credential, so the instance carries T3's saved-secret marker and each sync
+writes the shared proxy key from that node's Vault session into T3's per-host
+secret store (`t3:antigravity-key`, `userdata/secrets`, mode 0600);
+`GOOGLE_GEMINI_BASE_URL` points it at the proxy. Antigravity sends its catalog
 ids (`gemini-3.8-flash`, `gemini-3.1-flash-lite-preview`); the proxy serves
 them from the Antigravity account through declared model aliases in
 `config.template.yaml`, which every sync applies restart-free (the proxy
 hot-reloads its config). Its default Pro model is not served; pick Gemini 3.8
 Flash in T3.
 
+The built-in Codex and Claude instances use whatever is first on the PATH T3
+inherits from the login shell. Bootstrap keeps the pinned mise shims first
+(also at the end of each shell startup file, after nvm or a vendor installer
+adds its own directory), so they run the locked versions too.
+
 Each sync checks every agent per node (`agent:<name>:version` against the lock
-and `agent:<name>:session`, one tiny prompt through the T3 launcher; Cursor
-lists the account's models instead of spending inference). Failures do not stop
-other workers.
+and `agent:<name>:session`, one tiny prompt through its launcher). Failures do
+not stop other workers. New provider settings need a T3 restart: it happens
+automatically while T3 is idle, or immediately with `fleet-sync --maintenance`.
 
 Claude’s explicit model is `claude-sonnet-4-6`. Pinned Gemini CLI 0.66.0 supports native
 `gateway` authentication with `GOOGLE_GEMINI_BASE_URL` and a runtime Vault key;

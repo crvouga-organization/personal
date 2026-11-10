@@ -1727,12 +1727,6 @@
             "required": true
           },
           {
-            "name": "CURSOR_API_KEY",
-            "configs": ["prd"],
-            "used_by": ["fleet-agents"],
-            "required": false
-          },
-          {
             "name": "CLIPROXY_FLEET_MANAGEMENT_KEY",
             "configs": ["prd"],
             "used_by": ["cliproxy-fleet"],

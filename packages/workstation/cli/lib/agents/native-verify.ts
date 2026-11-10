@@ -2,7 +2,6 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Check, Runner } from '../../../../fleet/src/types';
-import { CURSOR_KEY } from './secrets';
 import { pinnedPath } from './toolchain';
 import { registry } from './registry';
 import {
@@ -60,16 +59,6 @@ export const NATIVE_AGENTS = [
     pin: 'aqua:anomalyco/opencode',
     wrapper: 'opencode-proxy.ts',
     args: ['run', '--model', 'personal_proxy/devin/muse-wonder-1-0', PROMPT],
-  },
-  {
-    name: 'cursor',
-    binary: 'cursor-agent',
-    pin: 'http:cursor-agent',
-    wrapper: 'cursor-agent.ts',
-    // Listing the account's models needs a valid sign-in but no inference
-    // (`status` reports "Not logged in" even with a valid API key).
-    args: ['models'],
-    expect: /\S/,
   },
 ] as const;
 
@@ -196,7 +185,7 @@ async function sessionCheck(
         timeoutMs: 150_000,
       }
     );
-  const expected = 'expect' in agent ? agent.expect : /\bOK\b/;
+  const expected = /\bOK\b/;
   let result = await launch();
   // One retry: a CLI's first launch on a node may still be initializing.
   if (!(result.ok && expected.test(result.stdout))) result = await launch();
@@ -206,15 +195,13 @@ async function sessionCheck(
     status: ok ? 'pass' : 'fail',
     summary: ok
       ? `${agent.name} runs signed in through its T3 launcher with the shared account.`
-      : sessionFailure(agent, result.stderr + result.stdout),
+      : sessionFailure(result.stderr + result.stdout),
     ...(ok ? {} : { remedy: { action: sessionRemedy(agent) } }),
   };
 }
 
 /** A stable code only; raw CLI output is never reported. */
-function sessionFailure(agent: Agent, output: string): string {
-  if (agent.name === 'cursor' && output.includes(CURSOR_KEY))
-    return 'AGENT_CURSOR_KEY_REQUIRED';
+function sessionFailure(output: string): string {
   if (/missing or out of date/.test(output)) return 'AGENT_PROFILE_STALE';
   if (/Required Vault secret unavailable/.test(output))
     return 'AGENT_VAULT_UNAVAILABLE';
@@ -224,8 +211,6 @@ function sessionFailure(agent: Agent, output: string): string {
 }
 
 function sessionRemedy(agent: Agent): string {
-  if (agent.name === 'cursor')
-    return `Cursor cannot use the CLI proxy; every node signs in as one shared Cursor account. Create a user API key in the Cursor dashboard and add it as ${CURSOR_KEY} to the vault OpenTofu root inputs (secret/personal/prd), apply that root, then rerun fleet-sync.`;
   if (agent.name === 'antigravity')
     return 'Antigravity sends its own catalog model ids; the proxy serves them through declared aliases that fleet-sync applies on the manager (see proxy:config-pending). Pick Gemini 3.8 Flash in T3: the default Pro model is not served by the shared accounts.';
   return `Run the ${agent.name} launcher on this node to inspect it: WS_AGENT_NODE=<node> bun packages/workstation/agents/${agent.wrapper}. Check this node's Vault session and the shared proxy.`;

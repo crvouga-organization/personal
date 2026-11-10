@@ -188,14 +188,13 @@ test('portable desired templates substitute paths safely and reject credential f
 
 type Instance = {
   driver: string;
-  config: { apiKey?: string; authMethod?: string; apiEndpoint?: string };
+  config: { apiKey?: string; authMethod?: string; binaryPath?: string };
   environment: { value: string }[];
 };
 type Definition = {
   instances: {
     personal_antigravity_proxy: Instance;
     personal_grok_proxy: Instance;
-    personal_cursor: Instance;
   };
 };
 
@@ -211,7 +210,6 @@ test('managed agent instances never carry a real credential or unknown field', a
     'personal_antigravity_proxy',
     'personal_claude_proxy',
     'personal_codex_proxy',
-    'personal_cursor',
     'personal_gateway_models',
     'personal_grok_proxy',
   ]);
@@ -221,8 +219,8 @@ test('managed agent instances never carry a real credential or unknown field', a
     (d: Definition) =>
       (d.instances.personal_grok_proxy.environment[1]!.value = 'xai-real'),
     (d: Definition) =>
-      (d.instances.personal_cursor.config.apiEndpoint = 'https://x'),
-    (d: Definition) => (d.instances.personal_cursor.driver = 'pi'),
+      (d.instances.personal_antigravity_proxy.config.binaryPath = '/x'),
+    (d: Definition) => (d.instances.personal_grok_proxy.driver = 'pi'),
   ]) {
     const invalid = JSON.parse(source) as Definition;
     mutate(invalid);

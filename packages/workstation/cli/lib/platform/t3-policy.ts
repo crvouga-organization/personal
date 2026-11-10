@@ -122,7 +122,7 @@ export async function healT3Policy(
       summary: 'T3_POLICY_PENDING_ACTIVE',
       remedy: {
         action:
-          'T3 has active work, so the new provider settings wait: the next fleet-sync applies them once T3 has been idle for five minutes (or restart T3 yourself).',
+          'T3 has active work, so the new provider settings wait: the next fleet-sync applies them once T3 has been idle for five minutes. To apply now (this restarts T3 and ends its active turns): personal fleet-sync --maintenance',
       },
     };
   await run(['systemctl', '--user', 'restart', T3_DESKTOP_UNIT], {

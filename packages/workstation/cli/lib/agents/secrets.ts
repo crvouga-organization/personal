@@ -8,14 +8,6 @@ export function proxyKey(): Promise<string> {
   return sharedSecret(registry.proxy.secret.key);
 }
 
-/** The one shared Cursor account. Cursor's backend cannot be reached through
- * the CLI proxy, so every node uses this Vault key instead of a login.
- */
-export const CURSOR_KEY = 'CURSOR_API_KEY';
-export function cursorKey(): Promise<string> {
-  return sharedSecret(CURSOR_KEY);
-}
-
 /** Reads one field of the shared Vault document with this node's own session. */
 export async function sharedSecret(key: string): Promise<string> {
   const reference = registry.proxy.secret;

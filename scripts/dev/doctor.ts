@@ -27,7 +27,6 @@ const COMMANDS: Record<string, string> = {
   ripgrep: 'rg',
   rust: 'rustc',
   'npm:@devcontainers/cli': 'devcontainer',
-  'http:cursor-agent': 'cursor-agent',
   'http:grok': 'grok',
   'http:antigravity': 'antigravity',
 };

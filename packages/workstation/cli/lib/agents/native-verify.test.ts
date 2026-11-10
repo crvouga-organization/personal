@@ -51,15 +51,15 @@ test('matching versions and signed-in launchers pass', async () => {
   );
 });
 
-test('a version drift or missing shared credential fails with a stable code only', async () => {
+test('a version drift or missing Vault session fails with a stable code only', async () => {
   const { run } = fake((args) => {
     if (args[1] === '--version') return { ok: true, stdout: 'tool 0.0.0' };
-    if (args[1]!.endsWith('cursor-agent.ts'))
+    if (args[1]!.endsWith('grok-proxy.ts'))
       return {
         ok: false,
         stdout: '',
         stderr:
-          'Required Vault secret unavailable: secret/data/personal/prd CURSOR_API_KEY. raw-detail',
+          'Required Vault secret unavailable: secret/data/personal/prd CLIPROXY_FLEET_CLIENT_API_KEY. raw-detail',
       };
     if (args[1]!.endsWith('antigravity-proxy.ts'))
       return {
@@ -83,8 +83,7 @@ test('a version drift or missing shared credential fails with a stable code only
   };
   expect(get('agent:grok:version').summary).toBe('AGENT_VERSION_MISMATCH');
   expect(get('agent:grok:version').action).toContain('mise install');
-  expect(get('agent:cursor:session').summary).toBe('AGENT_CURSOR_KEY_REQUIRED');
-  expect(get('agent:cursor:session').action).toContain('CURSOR_API_KEY');
+  expect(get('agent:grok:session').summary).toBe('AGENT_VAULT_UNAVAILABLE');
   expect(get('agent:antigravity:session').summary).toBe('AGENT_MODEL_UNSERVED');
   expect(get('agent:antigravity:session').action).toContain(
     'proxy:config-pending'

@@ -143,17 +143,17 @@
       }
     },
     "cursor": {
-      "binary": "cursor-agent",
-      "config": "Native ~/.cursor; no rendered profile",
-      "authentication": "One shared Cursor account: CURSOR_API_KEY from Vault secret/personal/prd (Cursor cannot use the CLI proxy)",
+      "binary": "cursor",
+      "config": "OS-specific Cursor User/settings.json and .cursor/mcp.json",
+      "authentication": "Interactive Cursor Settings > Models; credentials stay in application storage",
       "proxy": null,
-      "source": "https://cursor.com/docs/cli/reference/parameters",
+      "source": "https://prod.cursor.com/help/models-and-usage/api-keys",
       "directEndpoint": "Native vendor/account configuration; no portable endpoint override is applied",
       "capabilities": {
         "streaming": "unverified on fleet nodes",
         "toolCalls": "unverified on fleet nodes",
         "usageTracking": "independent native/runtime state",
-        "unattendedProfile": true
+        "unattendedProfile": false
       }
     },
     "antigravity": {

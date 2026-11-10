@@ -68,6 +68,7 @@ export async function selected(
       })
     : null;
   const started = Date.now();
+  const deployUi = { ...ui, maintenance: Boolean(options.maintenance) };
   const report = await synchronizeManager(
     {
       definition: scoped,
@@ -93,7 +94,7 @@ export async function selected(
         ),
     },
     run,
-    deployWithMonitoring(payload, canonical, run, ui)
+    deployWithMonitoring(payload, canonical, run, deployUi)
   ).finally(() => ui.progress.stop());
   return outcome(report, planFingerprint, started);
 }
@@ -142,7 +143,11 @@ function deployWithMonitoring(
   payload: Awaited<ReturnType<typeof prepareBootstrap>>,
   canonical: ReturnType<typeof parseDefinition>,
   run: Runner,
-  ui: { progress: SyncProgress; interactiveAuthorization: boolean }
+  ui: {
+    progress: SyncProgress;
+    interactiveAuthorization: boolean;
+    maintenance?: boolean;
+  }
 ): DeployNode {
   return async (node, revision) => {
     if (!payload || payload.revision !== revision)
@@ -170,7 +175,11 @@ function deployWithMonitoring(
     if (ui.interactiveAuthorization) ui.progress.stop();
     const before = await authorizeVault(node, vault, run);
     ui.progress.step(node.id, 'Converging (remote lock, install, verify)');
-    const result = await bootstrapRemote(node, payload, run);
+    const result = await bootstrapRemote(
+      node,
+      { ...payload, maintenance: Boolean(ui.maintenance) },
+      run
+    );
     // A fresh node gets vault from the bootstrap; log it in now. Its provider
     // checks in this run predate the login, so the next sync verifies them.
     result.checks.push(

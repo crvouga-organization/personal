@@ -56,7 +56,6 @@ test('apply adds the declared worker providers, keeps others, then is a no-op', 
     'personal_antigravity_proxy',
     'personal_claude_proxy',
     'personal_codex_proxy',
-    'personal_cursor',
     'personal_gateway_models',
     'personal_grok_proxy',
   ]);

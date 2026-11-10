@@ -37,7 +37,7 @@
       "displayName": "Claude (CLI Proxy)",
       "enabled": true,
       "config": {
-        "binaryPath": "${workspace}/packages/workstation/agents/claude-proxy.ts",
+        "binaryPath": "${workspace}/packages/workstation/agents/claude-proxy",
         "homePath": "${agents}/${node}/claude/proxy-home"
       },
       "environment": [
@@ -73,27 +73,18 @@
       "displayName": "Antigravity (CLI Proxy)",
       "enabled": true,
       "config": {
-        "binaryPath": "${workspace}/packages/workstation/agents/antigravity-proxy.ts"
+        "authMethod": "gemini-api-key",
+        "apiKey": "••••••"
       },
       "environment": [
         {
           "name": "WS_AGENT_NODE",
           "value": "${node}",
           "sensitive": false
-        }
-      ]
-    },
-    "personal_cursor": {
-      "driver": "cursor",
-      "displayName": "Cursor (shared account)",
-      "enabled": true,
-      "config": {
-        "binaryPath": "${workspace}/packages/workstation/agents/cursor-agent.ts"
-      },
-      "environment": [
+        },
         {
-          "name": "WS_AGENT_NODE",
-          "value": "${node}",
+          "name": "GOOGLE_GEMINI_BASE_URL",
+          "value": "https://cli-proxy.chrisvouga.dev",
           "sensitive": false
         }
       ]

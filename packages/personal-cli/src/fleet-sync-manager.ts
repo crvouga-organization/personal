@@ -9,6 +9,8 @@ import {
   verifyFleetProviders,
 } from '../../workstation/cli/lib/agents/fleet-verify';
 import { verifyNativeAgents } from '../../workstation/cli/lib/agents/native-verify';
+import { syncAntigravityKey } from '../../workstation/cli/lib/platform/t3-secrets';
+import { proxyKey } from '../../workstation/cli/lib/agents/secrets';
 import { convergeManagerHub } from '../../workstation/cli/lib/monitoring/manager-hub';
 import { enrollManagerMonitoring } from './fleet-sync-monitoring';
 import { desired, nodeId, paths } from './t3/desired';
@@ -36,6 +38,7 @@ export async function convergeManager(
   if (identity.status === 'pass') {
     checks.push(await managerPower(run));
     checks.push(await managerProviders(id, input.workspace, input.apply));
+    if (input.apply) checks.push(await syncAntigravityKey(proxyKey));
     if (input.apply) {
       // Same provider profiles and the same Vault gateway credential as every
       // worker: the instances above launch from these profiles, and the check

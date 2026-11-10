@@ -783,27 +783,6 @@ url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6
 checksum = "sha256:f0470eac7fb2f98886e1210457531bf1883c439ffa9e99d730388a1ff3dfeef5"
 url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/darwin-x64/cli_mac_x64.tar.gz"
 
-[[tools."http:cursor-agent"]]
-version = "2026.11.05-86047df"
-backend = "http:cursor-agent"
-specifiers = ["2026.11.05-86047df"]
-
-[tools."http:cursor-agent"."platforms.linux-arm64"]
-checksum = "sha256:131554bfdbf683d8ebfef83a2bb46ac4e5d060f198711040b07ed063c2471871"
-url = "https://downloads.cursor.com/lab/2026.11.05-86047df/linux/arm64/agent-cli-package.tar.gz"
-
-[tools."http:cursor-agent"."platforms.linux-x64"]
-checksum = "sha256:170b77786cbf4c93064d64fff12b71a178b968730561c64afc2e8e752535442e"
-url = "https://downloads.cursor.com/lab/2026.11.05-86047df/linux/x64/agent-cli-package.tar.gz"
-
-[tools."http:cursor-agent"."platforms.macos-arm64"]
-checksum = "sha256:67847e47e3ebd32b64c3fb4e6f36d475f1971b76e033b0ed6c9e01a3c1b440d7"
-url = "https://downloads.cursor.com/lab/2026.11.05-86047df/darwin/arm64/agent-cli-package.tar.gz"
-
-[tools."http:cursor-agent"."platforms.macos-x64"]
-checksum = "sha256:75f345ce7638ff136e5cd09c45c3b2de4e73e5f590b50655e01e826c02bd7cfa"
-url = "https://downloads.cursor.com/lab/2026.11.05-86047df/darwin/x64/agent-cli-package.tar.gz"
-
 [[tools."http:grok"]]
 version = "1.0.77"
 backend = "http:grok"
