@@ -1,4 +1,5 @@
 import { verifyT3Linked } from '../../fleet/src/t3-linked-check';
+import { T3_RESTARTED_SUMMARY } from '../../workstation/cli/lib/platform/t3-policy';
 import { createHash } from 'node:crypto';
 import { verifyT3Endpoint } from '../../fleet/src/t3-endpoint';
 import { authorizePrivilege } from './fleet-sync-privilege';
@@ -179,7 +180,16 @@ function deployWithMonitoring(
     ui.progress.step(node.id, 'Verifying SSH, OS and T3');
     result.checks.push(...(await inspectBootstrap(node, run, 'linux')));
     result.checks.push(...(await verifyT3Endpoint(node, run)));
-    result.checks.push(await verifyT3Linked(node, run));
+    // A worker T3 restarted by this sync (idle policy heal) needs a minute or
+    // two before the manager's link reconnects.
+    const restarted = result.checks.some(
+      (check) => check.summary === T3_RESTARTED_SUMMARY
+    );
+    result.checks.push(
+      await verifyT3Linked(node, run, {
+        reconnectMs: restarted ? 180_000 : 0,
+      })
+    );
     if (
       result.checks.some(
         (check) => check.id === 'configuration:apply' && check.status === 'pass'

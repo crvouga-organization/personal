@@ -81,6 +81,9 @@ export async function verifyT3Policy(
  * unchanged for this long means no turn is running.
  */
 export const T3_IDLE_MS = 5 * 60_000;
+/** Summary of a heal that restarted T3: its manager link reconnects next. */
+export const T3_RESTARTED_SUMMARY =
+  'T3 was idle, so it was restarted to load the new managed policy; the running server confirms it.';
 
 /** Newest write to T3's state database (0 when absent). */
 export async function lastT3Write(
@@ -134,8 +137,7 @@ export async function healT3Policy(
   return after.status === 'pass'
     ? {
         ...after,
-        summary:
-          'T3 was idle, so it was restarted to load the new managed policy; the running server confirms it.',
+        summary: T3_RESTARTED_SUMMARY,
       }
     : { ...after, summary: 'T3_POLICY_RESTART_FAILED' };
 }

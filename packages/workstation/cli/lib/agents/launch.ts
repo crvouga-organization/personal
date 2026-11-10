@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { registry, type Selection } from './registry';
 import { proxyKey } from './secrets';
-import { pinnedPath } from './toolchain';
+import { pinnedBinary, pinnedPath } from './toolchain';
 
 export async function launchProfile(
   root: string,
@@ -36,10 +36,12 @@ export async function launchProfile(
     configureGatewayEnvironment(env, selection);
   }
   toolEnvironment(env, selection, directory);
-  const command = [
-    selection.tool,
-    ...launchArgs(selection, directory, args, env),
-  ];
+  // Resolve the executable before launchArgs may point HOME at the profile.
+  const executable =
+    selection.tool === 'antigravity' && args[0] !== 'acp'
+      ? pinnedBinary(selection.tool, env)
+      : selection.tool;
+  const command = [executable, ...launchArgs(selection, directory, args, env)];
   if (selection.tool === 'antigravity' && args[0] === 'acp')
     return relayAcp(command, env);
   const child = Bun.spawn(command, {
