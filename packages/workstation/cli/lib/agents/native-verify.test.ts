@@ -5,6 +5,8 @@ import type { Runner } from '../../../../fleet/src/types';
 import { NATIVE_AGENTS, parsePins, verifyNativeAgents } from './native-verify';
 
 const workspace = resolve(import.meta.dir, '../../../../..');
+// Unwritable: tests never read or record cached verification.
+const NO_CACHE = { directory: '/dev/null/verify' };
 
 test('every native agent is pinned in the shared toolchain', async () => {
   const pins = parsePins(
@@ -38,7 +40,9 @@ test('matching versions and signed-in launchers pass', async () => {
     }
     return { ok: true, stdout: args.includes('models') ? 'auto\n' : 'OK\n' };
   });
-  const checks = await verifyNativeAgents('node-a', workspace, run);
+  const checks = await verifyNativeAgents('node-a', workspace, run, {
+    cache: NO_CACHE,
+  });
   expect(checks).toHaveLength(NATIVE_AGENTS.length * 2);
   expect(checks.every((check) => check.status === 'pass')).toBe(true);
   const launches = calls.filter((args) => args[0] === 'bun');
@@ -65,7 +69,9 @@ test('a version drift or missing shared credential fails with a stable code only
       };
     return { ok: true, stdout: 'OK' };
   });
-  const checks = await verifyNativeAgents('node-a', workspace, run);
+  const checks = await verifyNativeAgents('node-a', workspace, run, {
+    cache: NO_CACHE,
+  });
   const get = (id: string) => {
     const check = checks.find((entry) => entry.id === id);
     if (!check) throw new Error(`missing ${id}`);
@@ -80,7 +86,9 @@ test('a version drift or missing shared credential fails with a stable code only
   expect(get('agent:cursor:session').summary).toBe('AGENT_CURSOR_KEY_REQUIRED');
   expect(get('agent:cursor:session').action).toContain('CURSOR_API_KEY');
   expect(get('agent:antigravity:session').summary).toBe('AGENT_MODEL_UNSERVED');
-  expect(get('agent:antigravity:session').action).toContain('--maintenance');
+  expect(get('agent:antigravity:session').action).toContain(
+    'proxy:config-pending'
+  );
   expect(get('agent:claude:session').status).toBe('pass');
   expect(JSON.stringify(checks)).not.toContain('raw-detail');
 });
@@ -102,7 +110,9 @@ test('a drifted binary is reinstalled from the lock, then passes', async () => {
     }
     return { ok: true, stdout: args.includes('models') ? 'auto' : 'OK' };
   });
-  const checks = await verifyNativeAgents('node-a', workspace, run);
+  const checks = await verifyNativeAgents('node-a', workspace, run, {
+    cache: NO_CACHE,
+  });
   expect(checks.every((check) => check.status === 'pass')).toBe(true);
   expect(
     calls.filter((args) => args[0] === 'mise').map((args) => args.at(-1))
@@ -148,12 +158,10 @@ test('an account out of quota passes quietly without launching its session', asy
     }
     return { ok: true, stdout: args.includes('models') ? 'auto' : 'OK' };
   });
-  const checks = await verifyNativeAgents(
-    'node-a',
-    workspace,
-    run,
-    new Set(['codex'])
-  );
+  const checks = await verifyNativeAgents('node-a', workspace, run, {
+    outOfQuota: new Set(['codex']),
+    cache: NO_CACHE,
+  });
   expect(checks.every((check) => check.status === 'pass')).toBe(true);
   expect(calls.some((args) => args[1]?.endsWith('codex-proxy.ts'))).toBe(false);
 });
@@ -172,7 +180,9 @@ test('a first-launch failure is retried once', async () => {
       return { ok: ++grokRuns > 1, stdout: grokRuns > 1 ? 'OK' : '' };
     return { ok: true, stdout: args.includes('models') ? 'auto' : 'OK' };
   });
-  const checks = await verifyNativeAgents('node-a', workspace, run);
+  const checks = await verifyNativeAgents('node-a', workspace, run, {
+    cache: NO_CACHE,
+  });
   expect(checks.find((c) => c.id === 'agent:grok:session')?.status).toBe(
     'pass'
   );

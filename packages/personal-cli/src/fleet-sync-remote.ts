@@ -73,8 +73,10 @@ export async function selected(
       nodes,
       revision: options.revision,
       apply: Boolean(options.apply),
-      // The manager converges first; the first declared worker is the canary.
+      // The manager converges alongside the workers (first only for
+      // maintenance); the first declared worker is the canary.
       ...(canonical.workers[0] ? { canary: canonical.workers[0].id } : {}),
+      managerFirst: Boolean(options.maintenance),
       progress: (node, phase) => ui.progress.step(node, phase),
       finished: (node) => ui.progress.finished(node),
       manager: () =>

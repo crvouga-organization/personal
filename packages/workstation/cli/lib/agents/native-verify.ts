@@ -4,6 +4,13 @@ import { join } from 'node:path';
 import type { Check, Runner } from '../../../../fleet/src/types';
 import { CURSOR_KEY } from './secrets';
 import { pinnedPath } from './toolchain';
+import { registry } from './registry';
+import {
+  cacheKey,
+  cachedCheck,
+  sourceKey,
+  type VerifyCache,
+} from './verify-cache';
 
 const PROMPT = 'Reply with exactly: OK';
 
@@ -75,9 +82,13 @@ export async function verifyNativeAgents(
   node: string,
   workspace: string,
   run: Runner,
-  /** Proxy routes already found out of quota; their sessions are not run. */
-  outOfQuota: Set<string> = new Set()
+  options: {
+    /** Proxy routes already found out of quota; their sessions are not run. */
+    outOfQuota?: Set<string>;
+    cache?: VerifyCache;
+  } = {}
 ): Promise<Check[]> {
+  const { outOfQuota = new Set<string>(), cache = {} } = options;
   const pins = parsePins(await readFile(join(workspace, 'mise.toml'), 'utf8'));
   const cwd = await mkdtemp(join(tmpdir(), 'fleet-agents-'));
   try {
@@ -86,7 +97,18 @@ export async function verifyNativeAgents(
         await versionCheck(agent, pins[agent.pin], run),
         outOfQuota.has(agent.name)
           ? quotaPass(agent)
-          : await sessionCheck(agent, { node, workspace, cwd }, run),
+          : await cachedCheck(
+              `agent-${node}-${agent.name}`,
+              cacheKey(
+                node,
+                agent,
+                pins[agent.pin] ?? '',
+                registry,
+                await sourceKey(launcherSources(workspace, agent))
+              ),
+              () => sessionCheck(agent, { node, workspace, cwd }, run),
+              cache
+            ),
       ])
     );
     return results.flat();
@@ -205,6 +227,19 @@ function sessionRemedy(agent: Agent): string {
   if (agent.name === 'cursor')
     return `Cursor cannot use the CLI proxy; every node signs in as one shared Cursor account. Create a user API key in the Cursor dashboard and add it as ${CURSOR_KEY} to the vault OpenTofu root inputs (secret/personal/prd), apply that root, then rerun fleet-sync.`;
   if (agent.name === 'antigravity')
-    return 'Antigravity needs the proxy model aliases for its catalog ids. Apply them once in a quiet moment with personal fleet-sync --maintenance (restarts the proxy briefly).';
+    return 'Antigravity sends its own catalog model ids; the proxy serves them through declared aliases that fleet-sync applies on the manager (see proxy:config-pending). Pick Gemini 3.8 Flash in T3: the default Pro model is not served by the shared accounts.';
   return `Run the ${agent.name} launcher on this node to inspect it: WS_AGENT_NODE=<node> bun packages/workstation/agents/${agent.wrapper}. Check this node's Vault session and the shared proxy.`;
+}
+
+/** The launcher and profile code a session depends on. */
+function launcherSources(workspace: string, agent: Agent): string[] {
+  const agents = join(workspace, 'packages/workstation/agents');
+  const lib = join(workspace, 'packages/workstation/cli/lib/agents');
+  return [
+    join(agents, agent.wrapper),
+    join(agents, 'managed-proxy.ts'),
+    ...['launch.ts', 'render.ts', 'secrets.ts', 'toolchain.ts'].map((name) =>
+      join(lib, name)
+    ),
+  ];
 }

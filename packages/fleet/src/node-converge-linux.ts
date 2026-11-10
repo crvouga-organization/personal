@@ -1,8 +1,9 @@
 import { workerReadiness } from './worker-readiness';
 import { runAnsibleWithReceipt } from '../../workstation/cli/lib/platform/ansible-receipt';
 import {
+  healT3Policy,
+  lastT3Write,
   stageT3Policy,
-  verifyT3Policy,
 } from '../../workstation/cli/lib/platform/t3-policy';
 import { verifyUbuntuBoot } from '../../workstation/cli/lib/platform/ubuntu-verify';
 import { verifyResourceSafety } from '../../workstation/cli/lib/platform/resource-verify';
@@ -79,7 +80,9 @@ export async function convergeLinux(
   checks.push(...providers);
   checks.push(
     ...(await attempt('agent:verification', () =>
-      verifyNativeAgents(node, root, run, quotaLimited(providers))
+      verifyNativeAgents(node, root, run, {
+        outOfQuota: quotaLimited(providers),
+      })
     ))
   );
   checks.push(
@@ -219,6 +222,8 @@ async function convergeT3(
   run: Runner
 ): Promise<Check[]> {
   const artifact = managedT3();
+  // T3 activity before any fleet probe: decides whether a restart is safe.
+  const lastWrite = await lastT3Write();
   const checks = await convergeT3Service(
     artifact,
     run,
@@ -229,7 +234,7 @@ async function convergeT3(
     () => installT3Desktop(root, run)
   );
   if (checks.every((check) => check.status === 'pass'))
-    checks.push(await verifyT3Policy(artifact.path, run));
+    checks.push(await healT3Policy(artifact.path, run, { lastWrite }));
   const serviceReady = checks.some(
     (check) => check.id === 't3:service' && check.status === 'pass'
   );

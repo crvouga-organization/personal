@@ -25,6 +25,7 @@ if ! ready; then
   chmod 700 "$runs"
   # A fleet-owned, disposable run checkout: recreate it when stale or dirty.
   if [ -e "$dir" ]; then git -C "$repo" worktree remove --force "$dir" 2>/dev/null || rm -rf -- "$dir"; fi
+  rm -f -- "$runs/$revision.ready"
   git -C "$repo" worktree prune
   git -C "$repo" worktree add --quiet --detach "$dir" "$revision"
 fi
@@ -32,15 +33,26 @@ touch "$dir"
 cd "$dir"
 mise trust --quiet "$dir/mise.toml" >/dev/null 2>&1 || true
 # The manager runs the same locked toolchain (and so the same agent versions)
-# as every worker: publish this revision's global config and install it. Warm
-# runs only re-check installed tools.
-mise exec --locked bun -- bun scripts/dev/setup.ts --tools-only >&2 || { say 'shared toolchain install failed in the run checkout.'; exit 5; }
-# Frozen install; near-instant when this checkout is already warm.
-mise exec --locked bun -- bun install --frozen-lockfile --silent >&2 || { say 'frozen dependency install failed in the run checkout.'; exit 5; }
+# as every worker: publish this revision's global config, install it and the
+# frozen dependencies. Warm: skipped when this checkout did it within a day.
+# Stamp and log sit beside the checkout: inside it they would make it dirty.
+stamp="$runs/$revision.ready"
+log="$runs/$revision.setup.log"
+if [ -z "$(find "$stamp" -mmin -1440 2>/dev/null)" ]; then
+  rm -f -- "$stamp"
+  if ! { mise exec --locked bun -- bun scripts/dev/setup.ts --tools-only &&
+    mise exec --locked bun -- bun install --frozen-lockfile --silent; } >"$log" 2>&1; then
+    tail -n 20 "$log" >&2
+    say "toolchain or dependency install failed in the run checkout; full log: $log"
+    exit 5
+  fi
+  touch "$stamp"
+fi
 # Keep the three most recent run checkouts (names are commit SHAs).
 # shellcheck disable=SC2012
-for old in $(ls -1t "$runs" | tail -n +4); do
-  git -C "$repo" worktree remove --force "$runs/$old" 2>/dev/null || true
+for old in $(ls -1td "$runs"/*/ | tail -n +4); do
+  git -C "$repo" worktree remove --force "$old" 2>/dev/null || true
+  rm -f -- "${old%/}.setup.log" "${old%/}.ready"
 done
 git -C "$repo" worktree prune
 export PERSONAL_WORKSPACE="$dir"

@@ -139,21 +139,36 @@ class FleetSingleton(unittest.TestCase):
         self.assertFalse(result['ok'])
         self.assertEqual(len(waits), 5)
 
-    def test_declared_config_waits_for_maintenance_then_applies(self):
+    def test_declared_config_applies_on_every_sync(self):
         self.runtime()
         self.link_agents()
-        pending = lambda args, timeout=120: (self.calls.append(args) or not self.declared_check(args))
+        state = {'applied': False}
+
+        def proxy(args, timeout=120):
+            self.calls.append(args)
+            if args[-2:] == ['declared', '--apply']:
+                state['applied'] = True
+                return True
+            if self.declared_check(args):
+                return state['applied']
+            return True
+
+        result = self.owner(run=proxy, audit_fn=lambda root: (True, SHA),
+                            endpoint_check=lambda root: True)
+        self.assertTrue(any(call[-2:] == ['declared', '--apply'] for call in self.calls))
+        self.assertNotIn('PROXY_CONFIG_PENDING', [p['code'] for p in result['phases']])
+        self.assertTrue(result['ok'])
+
+    def test_declared_config_failure_is_reported(self):
+        self.runtime()
+        self.link_agents()
+        pending = lambda args, timeout=120: (self.calls.append(args) or not (
+            self.declared_check(args) or args[-1] == '--apply'))
         result = self.owner(run=pending, audit_fn=lambda root: (True, SHA),
                             endpoint_check=lambda root: True)
         codes = [p['code'] for p in result['phases']]
         self.assertIn('PROXY_CONFIG_PENDING', codes)
-        self.assertIn('--maintenance', result['phases'][codes.index('PROXY_CONFIG_PENDING')]['remedy']['action'])
-        self.assertFalse(any(call[-1] == '--apply' for call in self.calls))
         self.assertFalse(result['ok'])
-        self.calls.clear()
-        self.owner(run=pending, maintenance=True, audit_fn=lambda root: (True, SHA),
-                   endpoint_check=lambda root: True)
-        self.assertTrue(any(call[-2:] == ['declared', '--apply'] for call in self.calls))
 
     def test_restart_free_requires_known_revisions(self):
         self.assertFalse(fleet.restart_free('Unknown revision', SHA))

@@ -52,7 +52,9 @@ export async function convergeManager(
       // Same agents, versions and shared accounts as every worker.
       checks.push(
         ...(await attempt('agent:verification', () =>
-          verifyNativeAgents(id, input.workspace, run, quotaLimited(providers))
+          verifyNativeAgents(id, input.workspace, run, {
+            outOfQuota: quotaLimited(providers),
+          })
         ))
       );
     }

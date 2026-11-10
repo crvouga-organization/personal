@@ -116,7 +116,7 @@ def declared_candidate():
     return yaml.safe_dump(live, sort_keys=False) if changed else None
 
 
-def apply_config(candidate):
+def apply_config(candidate, restart=True):
     run([str(root / "scripts/validate-config"), str(candidate), "--require-fill-first"])
     staging(candidate)
     shutil.copy2(
@@ -128,8 +128,31 @@ def apply_config(candidate):
     os.replace(
         root / "state/runtime/config.yaml.new", root / "state/runtime/config.yaml"
     )
-    compose("restart", "proxy")
+    if restart:
+        compose("restart", "proxy")
     wait()
+
+
+def declared_aliases():
+    """Client-visible model ids the declared aliases must add."""
+    import yaml
+
+    template = yaml.safe_load((root / "config.template.yaml").read_text())
+    aliases = ((template.get("oauth") or {}).get("model-alias") or {}).values()
+    return {entry["alias"] for entries in aliases for entry in entries or []}
+
+
+def hot_reloaded(expected):
+    """The proxy watches its config file; wait for the reload to serve it."""
+    for _ in range(15):
+        try:
+            served = {model.get("id") for model in health()}
+            if expected <= served:
+                return True
+        except Exception:
+            pass
+        time.sleep(2)
+    return False
 
 
 def lock():
@@ -324,7 +347,12 @@ try:
                 file.write(candidate)
             try:
                 os.chmod(file.name, 0o600)
-                apply_config(pathlib.Path(file.name))
+                # Restart-free: the proxy hot-reloads config.yaml. Restart
+                # only if the reload never serves the declared settings.
+                apply_config(pathlib.Path(file.name), restart=False)
+                if not hot_reloaded(declared_aliases()):
+                    compose("restart", "proxy")
+                    wait()
             finally:
                 pathlib.Path(file.name).unlink(missing_ok=True)
     elif command in ["upgrade", "rollback"]:

@@ -4,11 +4,26 @@ import { proxyKey } from './secrets';
 import type { Check } from '../../../../fleet/src/types';
 import { registry, type Selection } from './registry';
 import { verifyProvider } from './verify';
+import { join } from 'node:path';
+import {
+  cacheKey,
+  cachedCheck,
+  sourceKey,
+  type VerifyCache,
+} from './verify-cache';
+
+/** The verifier's own code: changing how providers are checked re-verifies. */
+const VERIFIER_SOURCES = ['fleet-verify.ts', 'verify.ts', 'round-trip.ts'].map(
+  (name) => join(import.meta.dir, name)
+);
 
 /** Uses the selected gateway credential in this node's noninteractive environment.
  * Authentication/inference evidence does not certify native clients or paired T3.
  */
-export async function verifyFleetProviders(node: string): Promise<Check[]> {
+export async function verifyFleetProviders(
+  node: string,
+  cache: VerifyCache = {}
+): Promise<Check[]> {
   let key: string;
   try {
     key = await proxyKey();
@@ -24,13 +39,40 @@ export async function verifyFleetProviders(node: string): Promise<Check[]> {
     }));
   }
 
+  // Warm runs reuse recent passes, but always prove this node's key still
+  // authenticates to the live gateway; if it does not, verify everything.
+  const live = await gatewayAuthenticates(key);
+  const code = await sourceKey(VERIFIER_SOURCES);
   // Providers are independent upstream accounts: verify them concurrently so
   // the slowest one, not their sum, bounds the step. Order stays stable.
   return Promise.all(
     Object.entries(registry.proxy.routes).map(([provider, route]) =>
-      verifyRoute(node, provider, route, key)
+      cachedCheck(
+        `provider-${node}-${provider}`,
+        cacheKey(node, registry.proxy.endpoint, route, code),
+        () => verifyRoute(node, provider, route, key),
+        {
+          ...cache,
+          bypass: Boolean(cache.bypass) || !live,
+          reuse: (check) => check.summary !== QUOTA_SUMMARY,
+        }
+      )
     )
   );
+}
+
+/** One cheap authenticated model listing: Vault key, proxy and route are live. */
+async function gatewayAuthenticates(key: string): Promise<boolean> {
+  try {
+    const response = await fetch(registry.proxy.endpoint + '/v1/models', {
+      headers: { Authorization: `Bearer ${key}` },
+      redirect: 'error',
+      signal: AbortSignal.timeout(15_000),
+    });
+    return response.ok;
+  } catch {
+    return false;
+  }
 }
 
 async function verifyRoute(

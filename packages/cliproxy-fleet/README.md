@@ -247,9 +247,10 @@ proxy owner is `manager.id`. Flags: `--definition`, `--node`, `--revision`,
   (`personal fleet-sync --maintenance`). Settings the fleet owns in the live
   config (today `oauth.model-alias`, from `config.template.yaml`) are compared
   by `ops declared` (exit 3 when they differ) and reported as
-  `PROXY_CONFIG_PENDING`; `ops declared --apply` (run by
-  `fleet-sync --maintenance`) replaces only those keys through the validated
-  `apply` path, which restarts the proxy. With
+  `PROXY_CONFIG_PENDING`; `ops declared --apply` (run by every fleet-sync)
+  validates and stages the candidate, replaces only those keys and relies on
+  the proxy's config hot reload (restarting only if the reload never serves
+  the declared aliases). With
   `--apply` it only loads stopped agents (`PROXY_UNIT_*`) or enables the
   connector (`PROXY_ENDPOINT_DISABLED`), then checks `PROXY_ENDPOINT_AUTH`.
 - **Workers:** `PROXY_CLIENT_ROLE` when clean. An active or enabled local proxy

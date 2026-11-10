@@ -148,10 +148,10 @@ def inspect(root, node, owner, revision, run=execute, audit_fn=audit, compatible
                             'Public connector enabled', 'Endpoint marker absent', True))
     if not run(declared(root, apply=False)):
         checks.append(phase('PROXY_CONFIG_PENDING', 'action-required',
-                            'The live proxy config lacks fleet-declared settings (model aliases). Applying them '
-                            'restarts the proxy and interrupts in-flight inference. Apply it in a quiet moment with: '
-                            'personal fleet-sync --maintenance',
-                            'Declared settings from config.template.yaml', 'Live config differs'))
+                            'The live proxy config lacks fleet-declared settings (model aliases) and applying them '
+                            'failed. Inspect `ops declared --apply` on the manager; the previous config is kept as '
+                            'state/runtime/config.yaml.previous.',
+                            'Declared settings from config.template.yaml', 'Live config differs', True))
     return checks
 
 
@@ -231,7 +231,8 @@ def reconcile(root, node, owner, revision, apply=False, maintenance=False, run=e
             checks = inspect(root, node, owner, revision, run, audit_fn, compatible_fn, backend, identity)
             continue
         changed = converge_units(root, checks, backend, run) or changed
-        if 'PROXY_CONFIG_PENDING' in codes and maintenance:
+        if 'PROXY_CONFIG_PENDING' in codes:
+            # Self-healing and restart-free: the proxy hot-reloads its config.
             changed = run(declared(root, apply=True), 600) or changed
         checks = inspect(root, node, owner, revision, run, audit_fn, compatible_fn, backend, identity)
         break
