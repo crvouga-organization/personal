@@ -88,7 +88,15 @@
     # extracts this checksum-verified archive natively.
     - name: Extract the pinned executable when new or missing
       ansible.builtin.command:
-        argv: [/usr/bin/tar, -xzf, '{{ beszel_root }}/agent.tar.gz', -C, '{{ beszel_root }}', beszel-agent]
+        argv:
+          [
+            /usr/bin/tar,
+            -xzf,
+            '{{ beszel_root }}/agent.tar.gz',
+            -C,
+            '{{ beszel_root }}',
+            beszel-agent,
+          ]
       when: agent_archive.changed or not agent_binary.stat.exists or not agent_binary.stat.executable
       changed_when: true
       notify: Restart agent

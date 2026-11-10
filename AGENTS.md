@@ -9,11 +9,22 @@ independent user command interface. Root task scripts are aliases or build/test
 and bootstrap tasks, not additional CLI products. Third-party tools retain their
 upstream CLIs. Keep command discovery and interactive routing in the shared registry.
 
+## Local development infra vs cloud app infra
+
+These are two separate domains. Never mix their commands, owners, credentials or docs.
+
+- **Local development infrastructure**: developer machines. mise toolchain, `packages/workstation`, `packages/fleet` (manager + Ubuntu workers), T3, the `packages/cliproxy-fleet` process, Beszel agents, local Turborepo cache, disposable test containers. Owned by `mise.toml`/`mise.lock`, Workstation Ansible and `personal fleet-*`. Agent guide: `llms-local.txt` (`scripts/llms-local.template.md`).
+- **Cloud app infrastructure**: OpenTofu resources apps use. Vault/OpenBao, PostgreSQL, R2, Railway services, GHCR images, DNS/TLS/tunnels, GitHub OIDC/rulesets, auth relay. Owned only by `packages/infra/tofu` (`bun run infra*`). Agent guide: `llms-cloud.txt` (`scripts/llms-cloud.template.md`).
+
+- `dev` is not local: the Vault `dev` config, `dev` bucket and `dev` `DATABASE_URL` are cloud resources.
+- Machines read cloud credentials (Vault login, R2 backups) but never create or change cloud resources. OpenTofu never configures a machine. A developer machine is never a hosting target.
+- A task that touches both is two tasks: do each half with its own owner and guide.
+
 ## Monorepo
 
 Flat Turborepo + Bun workspace. All packages live under `packages/` and use `@pkgs/*` names. Install at the root with `bun install`.
 
-- `packages/portfolio`: Astro static portfolio, GitHub insights, generated resume PDF. Facts live in `src/knowledge/` (append projects to `projects.ts` there, screenshots to `src/content/projects/media.ts`); `src/archetypes/` tailors a presentation per job archetype (`/a/<id>/`, indexed at `/archetypes/`) from the committed market landscape. Use `/portfolio-refresh` after market or knowledge changes. **All portfolio UI development goes through Storybook** (`bun run storybook`; deployed at `/storybook/`): build and review components and screens there before they reach a page; they read only design-system tokens (`src/design-system/`), each archetype has its own theme, and every component and screen has stories in every archetype × scheme (`src/stories/variants.ts`). **Every PR that changes portfolio UI posts Storybook screenshots** before review: `bun run storybook:build && bun run storybook:screenshots && bun run storybook:pr-comment <pr>`. Build with Node >=22 and Playwright Chromium. Do not commit `dist/` or the generated PDF.
+- `packages/portfolio`: Astro static portfolio, GitHub insights, generated resume PDF. Everything is a function of two knowledge bases: personal facts in `src/knowledge/` (append projects to `projects.ts` there, screenshots to `src/content/projects/media.ts`) and the market in `src/market/` (the measured landscape plus cited market research). Each job role is one file in `src/roles/by-id/` (`bun run roles:new` scaffolds one, `roles:sync` regenerates what follows); its presentation (`/a/<id>/`, indexed at `/roles/`), theme and résumé are derived, and the unlisted `/gaps/` page grades the facts against the market. Use `/portfolio-refresh` after market or knowledge changes. **All portfolio UI development goes through Storybook** (`bun run storybook`; deployed at `/storybook/`): build and review components and screens there before they reach a page; they read only design-system tokens (`src/design-system/`), each role has its own theme, and every component and screen has stories in every role × scheme (`src/stories/variants.ts`). **Every PR that changes portfolio UI posts Storybook screenshots** before review: `bun run storybook:build && bun run storybook:screenshots && bun run storybook:pr-comment <pr>`. Build with Node >=22 and Playwright Chromium. Do not commit `dist/` or the generated PDF.
 - `packages/turborepo-remote-cache`: Dormant Bun cache server; excluded from hosting and normal development. Runtime closure: `@pkgs/{assert,logger,object-store,secret-store,secret-string,vault}`.
 - `packages/infra`: OpenTofu definitions and read-only build/health/documentation adapters.
 - `packages/vault-service`: OpenBao runtime image and local read/auth CLI. Its infrastructure, schema, initialization, policies, auth and KV values are owned by OpenTofu.
@@ -56,8 +67,8 @@ Service runtime logs use `@pkgs/logger` and its [observability contract](package
 
 A green local check is not green CI. If pushing, watch the complete **CI** workflow with `bun run gh:ci:watch` and fix publish/deploy failures before claiming success. `/pr-ready` uses `.agents/commands/pr-ready.md`; PRs to main require `Check`. The legacy `Fleet` and `Required` status aliases remain until the OpenTofu-owned ruleset migration is verified live; see `packages/infra/docs/application-decommission.md`.
 
-## Generated integration guide
+## Generated agent guides
 
-Root `llms.txt` is generated; never edit it directly. Edit `scripts/llms-txt.template.md`, the OpenTofu inventory/template, CI inputs or the cache secret registry, then run `bun run llms:sync`. `bun run check:llms` checks drift and dangling references. Hosting requests are `[hosting] <id> — …` issues; add the OpenTofu inventory entry and portfolio content in a PR closing the issue.
+Root `llms.txt` (index), `llms-local.txt` and `llms-cloud.txt` are generated by `scripts/llms-txt.ts`; never edit them directly. Edit `scripts/llms-txt.template.md` (index only, no instructions), `scripts/llms-local.template.md` (machines/fleet), `scripts/llms-cloud.template.md` (cloud resources), or their sources (OpenTofu inventory, CI inputs, the cache secret registry, `scripts/dev/README.md`, `mise.toml`, fleet docs), then run `bun run llms:sync`. `bun run check:llms` checks drift, dangling references and the `BOUNDARY` markers that stop either guide from containing the other's content. Hosting requests are `[hosting] <id> — …` issues; add the OpenTofu inventory entry and portfolio content in a PR closing the issue.
 
 Canonical agent commands live in `.agents/commands/*.md`; harness copies are symlinks managed by `bun run agents:sync`. Edit the canonical files.
