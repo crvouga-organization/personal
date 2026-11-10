@@ -5,6 +5,7 @@ import { hostId } from '../../fleet/src/topology';
 import { convergeProxy } from '../../fleet/src/proxy-converge';
 import { attempt } from '../../fleet/src/node-converge-shared';
 import { verifyFleetProviders } from '../../workstation/cli/lib/agents/fleet-verify';
+import { verifyNativeAgents } from '../../workstation/cli/lib/agents/native-verify';
 import { convergeManagerHub } from '../../workstation/cli/lib/monitoring/manager-hub';
 import { enrollManagerMonitoring } from './fleet-sync-monitoring';
 import { desired, nodeId, paths } from './t3/desired';
@@ -44,6 +45,12 @@ export async function convergeManager(
       checks.push(
         ...(await attempt('provider:verification', () =>
           verifyFleetProviders(id)
+        ))
+      );
+      // Same agents, versions and shared accounts as every worker.
+      checks.push(
+        ...(await attempt('agent:verification', () =>
+          verifyNativeAgents(id, input.workspace, run)
         ))
       );
     }
@@ -134,7 +141,14 @@ export async function managerProviders(
   }
 }
 
-const PROFILE_TOOLS = ['codex', 'claude', 'gemini', 'opencode'] as const;
+const PROFILE_TOOLS = [
+  'codex',
+  'claude',
+  'gemini',
+  'opencode',
+  'grok',
+  'antigravity',
+] as const;
 
 /** Applies the proxy agent profiles the managed T3 instances launch from
  * (codex-proxy.ts refuses to start with a missing or stale profile). Workers
@@ -187,8 +201,7 @@ export async function managerAgentProfiles(
     {
       id: 'configuration:apply',
       status: 'pass',
-      summary:
-        'The manager has the same proxy agent profiles as every worker (codex, claude, gemini, opencode).',
+      summary: `The manager has the same proxy agent profiles as every worker (${PROFILE_TOOLS.join(', ')}).`,
     },
   ];
 }

@@ -38,6 +38,7 @@ const COLUMNS: { title: string; matches: (id: string) => boolean }[] = [
       id.startsWith('proxy:') ||
       id === 'worker:proxy-singleton',
   },
+  { title: 'AGENTS', matches: (id) => id.startsWith('agent:') },
   {
     title: 'MON',
     matches: (id) =>

@@ -78,7 +78,7 @@ async function validateOutput(
     candidates?: unknown[];
   };
   const output =
-    tool === 'gemini'
+    tool === 'gemini' || tool === 'antigravity'
       ? payload.candidates
       : tool === 'claude'
         ? payload.content
@@ -98,7 +98,8 @@ export function inferenceRequest(selection: Selection): {
   path: string;
   body: object;
 } {
-  if (selection.tool === 'gemini')
+  // Antigravity's CLI speaks the same Gemini generateContent protocol.
+  if (selection.tool === 'gemini' || selection.tool === 'antigravity')
     return {
       path: `/v1beta/models/${encodeURIComponent(selection.model)}:generateContent`,
       body: {

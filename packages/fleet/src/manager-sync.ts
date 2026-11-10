@@ -381,7 +381,7 @@ export function blocksPromotion(check: Check): boolean {
   if (!blocking(check)) return false;
   if (check.id === 't3:service' && T3_MAINTENANCE.has(check.summary))
     return false;
-  return !/^(worker:|beszel:|provider:|proxy:|t3:end-to-end$|t3:paired-access$|t3:policy-loaded$|ubuntu:boot-policy$)/.test(
+  return !/^(worker:|beszel:|provider:|agent:|proxy:|t3:end-to-end$|t3:paired-access$|t3:policy-loaded$|ubuntu:boot-policy$)/.test(
     check.id
   );
 }

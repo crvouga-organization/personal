@@ -32,6 +32,10 @@ class FleetSingleton(unittest.TestCase):
         self.calls.append(args)
         return True
 
+    @staticmethod
+    def declared_check(call):
+        return call[-1] == 'declared' and call[-2].endswith('scripts/ops')
+
     def owner(self, **kwargs):
         kwargs.setdefault('backend', self.launchd)
         kwargs.setdefault('identity', MANAGER)
@@ -135,6 +139,22 @@ class FleetSingleton(unittest.TestCase):
         self.assertFalse(result['ok'])
         self.assertEqual(len(waits), 5)
 
+    def test_declared_config_waits_for_maintenance_then_applies(self):
+        self.runtime()
+        self.link_agents()
+        pending = lambda args, timeout=120: (self.calls.append(args) or not self.declared_check(args))
+        result = self.owner(run=pending, audit_fn=lambda root: (True, SHA),
+                            endpoint_check=lambda root: True)
+        codes = [p['code'] for p in result['phases']]
+        self.assertIn('PROXY_CONFIG_PENDING', codes)
+        self.assertIn('--maintenance', result['phases'][codes.index('PROXY_CONFIG_PENDING')]['remedy']['action'])
+        self.assertFalse(any(call[-1] == '--apply' for call in self.calls))
+        self.assertFalse(result['ok'])
+        self.calls.clear()
+        self.owner(run=pending, maintenance=True, audit_fn=lambda root: (True, SHA),
+                   endpoint_check=lambda root: True)
+        self.assertTrue(any(call[-2:] == ['declared', '--apply'] for call in self.calls))
+
     def test_restart_free_requires_known_revisions(self):
         self.assertFalse(fleet.restart_free('Unknown revision', SHA))
         self.assertFalse(fleet.restart_free(None, SHA))
@@ -171,7 +191,8 @@ class FleetSingleton(unittest.TestCase):
         self.assertFalse(result['changed'])
         self.assertEqual(result['phases'][-1]['code'], 'PROXY_ENDPOINT_AUTH')
         self.assertIn('PROXY_UNIT_DEV_CHRISVOUGA_CLIPROXY_FLEET', {p['code'] for p in result['phases']})
-        self.assertTrue(all(call[:2] == ['launchctl', 'print'] for call in self.calls))
+        self.assertTrue(all(call[:2] == ['launchctl', 'print'] or self.declared_check(call)
+                            for call in self.calls))
 
     def test_unrelated_monorepo_update_does_not_restart_identical_gateway_source(self):
         self.runtime()
@@ -181,4 +202,5 @@ class FleetSingleton(unittest.TestCase):
                             compatible_fn=lambda installed, desired: True)
         self.assertTrue(result['ok'])
         self.assertFalse(result['changed'])
-        self.assertTrue(all(call[:2] == ['launchctl', 'print'] for call in self.calls))
+        self.assertTrue(all(call[:2] == ['launchctl', 'print'] or self.declared_check(call)
+                            for call in self.calls))

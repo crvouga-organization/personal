@@ -146,7 +146,21 @@ def inspect(root, node, owner, revision, run=execute, audit_fn=audit, compatible
         checks.append(phase('PROXY_ENDPOINT_DISABLED', 'action-required',
                             'Enable the existing public connector using its existing Vault credential.',
                             'Public connector enabled', 'Endpoint marker absent', True))
+    if not run(declared(root, apply=False)):
+        checks.append(phase('PROXY_CONFIG_PENDING', 'action-required',
+                            'The live proxy config lacks fleet-declared settings (model aliases). Applying them '
+                            'restarts the proxy and interrupts in-flight inference. Apply it in a quiet moment with: '
+                            'personal fleet-sync --maintenance',
+                            'Declared settings from config.template.yaml', 'Live config differs'))
     return checks
+
+
+def declared(root, apply):
+    """Checks (exit 0 when unchanged) or applies the template-owned settings.
+    Runs under the install's pinned interpreter: only it carries PyYAML."""
+    python = root / 'tools/bin/python3'
+    return [str(python) if python.exists() else sys.executable, '-B', str(root / 'scripts/ops'),
+            'declared', *(['--apply'] if apply else [])]
 
 
 def endpoint_health(root):
@@ -173,6 +187,24 @@ def endpoint_verified(root, endpoint_check, attempts=6, delay=10, sleep=time.sle
     return False
 
 
+def converge_units(root, checks, backend, run):
+    """Loads stopped agents and enables the connector; never restarts a running gateway."""
+    changed = False
+    for item in checks:
+        if item['status'] != 'action-required':
+            continue
+        if item['code'].startswith('PROXY_UNIT_'):
+            unit = item['expected'].removeprefix('Enabled and active ')
+            # Backup operations must not run before existing recovery confirmation.
+            if unit in backend.recovery_gated and not (root / 'state/secrets/recovery-confirmed').exists():
+                continue
+            for command in backend.enable(unit):
+                changed = run(command) or changed
+        elif item['code'] == 'PROXY_ENDPOINT_DISABLED':
+            changed = run([sys.executable, '-B', str(root / 'scripts/public-endpoint'), 'enable']) or changed
+    return changed
+
+
 def reconcile(root, node, owner, revision, apply=False, maintenance=False, run=execute, audit_fn=audit,
               endpoint_check=endpoint_health, compatible_fn=equivalent_source, backend=None, identity=None,
               restart_free_fn=restart_free, sleep=time.sleep):
@@ -180,28 +212,29 @@ def reconcile(root, node, owner, revision, apply=False, maintenance=False, run=e
     backend = backend or cliproxy_host.backend()
     checks = inspect(root, node, owner, revision, run, audit_fn, compatible_fn, backend, identity)
     changed = False
-    codes = {item['code'] for item in checks}
     blocked = {'PROXY_PLATFORM_MISMATCH', 'PROXY_IDENTITY_MISMATCH', 'PROXY_RECOVERY_REQUIRED',
                'PROXY_SOURCE_DRIFT', 'PROXY_UPDATE_PENDING'}
-    if apply and node == owner and not codes & (blocked - {'PROXY_UPDATE_PENDING'}):
-        if codes == {'PROXY_UPDATE_PENDING'} and (maintenance or restart_free_fn(checks[0]['observed'], revision)):
+    # Two passes: an update installed in the first may surface declared
+    # settings (or stopped units) that the second then converges.
+    for _ in range(2 if apply and node == owner else 0):
+        codes = {item['code'] for item in checks}
+        if codes & (blocked - {'PROXY_UPDATE_PENDING'}):
+            break
+        if 'PROXY_UPDATE_PENDING' in codes:
+            if not (maintenance or restart_free_fn(checks[0]['observed'], revision)):
+                break
             # Self-healing: updates that keep the gateway running apply on every
             # sync; ones that recreate it wait for --maintenance.
             changed = run(backend.install(sys.executable, SCRIPTS, revision), 1500)
-        elif not codes & blocked:
-            for item in checks:
-                if item['status'] != 'action-required':
-                    continue
-                if item['code'].startswith('PROXY_UNIT_'):
-                    unit = item['expected'].removeprefix('Enabled and active ')
-                    # Backup operations must not run before existing recovery confirmation.
-                    if unit in backend.recovery_gated and not (root / 'state/secrets/recovery-confirmed').exists():
-                        continue
-                    for command in backend.enable(unit):
-                        changed = run(command) or changed
-                elif item['code'] == 'PROXY_ENDPOINT_DISABLED':
-                    changed = run([sys.executable, '-B', str(root / 'scripts/public-endpoint'), 'enable']) or changed
+            if not changed:
+                break
+            checks = inspect(root, node, owner, revision, run, audit_fn, compatible_fn, backend, identity)
+            continue
+        changed = converge_units(root, checks, backend, run) or changed
+        if 'PROXY_CONFIG_PENDING' in codes and maintenance:
+            changed = run(declared(root, apply=True), 600) or changed
         checks = inspect(root, node, owner, revision, run, audit_fn, compatible_fn, backend, identity)
+        break
     if node == owner and all(item['status'] == 'unchanged' for item in checks):
         verified = endpoint_verified(root, endpoint_check, sleep=sleep)
         checks.append(phase('PROXY_ENDPOINT_AUTH', 'unchanged' if verified else 'action-required',

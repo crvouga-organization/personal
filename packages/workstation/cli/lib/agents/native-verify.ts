@@ -1,0 +1,191 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import type { Check, Runner } from '../../../../fleet/src/types';
+import { CURSOR_KEY } from './secrets';
+
+const PROMPT = 'Reply with exactly: OK';
+
+/** Every agent T3 offers on every node, launched exactly as T3 launches it:
+ * through the tracked wrapper that injects the shared credential. `pin` names
+ * the mise.toml tool whose locked version the installed binary must report.
+ */
+export const NATIVE_AGENTS = [
+  {
+    name: 'claude',
+    binary: 'claude',
+    pin: 'claude',
+    wrapper: 'claude-proxy.ts',
+    args: ['-p', PROMPT],
+  },
+  {
+    name: 'codex',
+    binary: 'codex',
+    pin: 'codex',
+    wrapper: 'codex-proxy.ts',
+    args: ['exec', '--skip-git-repo-check', PROMPT],
+  },
+  {
+    name: 'grok',
+    binary: 'grok',
+    pin: 'http:grok',
+    wrapper: 'grok-proxy.ts',
+    args: ['-p', PROMPT],
+  },
+  {
+    name: 'antigravity',
+    binary: 'antigravity',
+    pin: 'http:antigravity',
+    wrapper: 'antigravity-proxy.ts',
+    args: [
+      '-p',
+      PROMPT,
+      '--model',
+      'Gemini 3.8 Flash (High)',
+      '--print-timeout',
+      '90s',
+    ],
+  },
+  {
+    name: 'muse',
+    binary: 'opencode',
+    pin: 'aqua:anomalyco/opencode',
+    wrapper: 'opencode-proxy.ts',
+    args: ['run', '--model', 'personal_proxy/devin/muse-wonder-1-0', PROMPT],
+  },
+  {
+    name: 'cursor',
+    binary: 'cursor-agent',
+    pin: 'http:cursor-agent',
+    wrapper: 'cursor-agent.ts',
+    // Listing the account's models needs a valid sign-in but no inference
+    // (`status` reports "Not logged in" even with a valid API key).
+    args: ['models'],
+    expect: /\S/,
+  },
+] as const;
+
+type Agent = (typeof NATIVE_AGENTS)[number];
+
+/** Same versions everywhere (from the shared mise.lock) and a working signed-in
+ * session through each T3 launcher. Agents run concurrently and are bounded.
+ */
+export async function verifyNativeAgents(
+  node: string,
+  workspace: string,
+  run: Runner
+): Promise<Check[]> {
+  const pins = parsePins(await readFile(join(workspace, 'mise.toml'), 'utf8'));
+  const cwd = await mkdtemp(join(tmpdir(), 'fleet-agents-'));
+  try {
+    const results = await Promise.all(
+      NATIVE_AGENTS.map(async (agent) => [
+        await versionCheck(agent, pins[agent.pin], run),
+        await sessionCheck(agent, { node, workspace, cwd }, run),
+      ])
+    );
+    return results.flat();
+  } finally {
+    await rm(cwd, { recursive: true, force: true });
+  }
+}
+
+/** Reads `tool = "x"` and `"tool" = { version = "x", ... }` pins. */
+export function parsePins(source: string): Record<string, string> {
+  const pins: Record<string, string> = {};
+  const pattern =
+    /^"?([A-Za-z0-9:@/._-]+)"?\s*=\s*(?:"([^"]+)"|\{[^\n]*?\bversion\s*=\s*"([^"]+)")/gm;
+  for (const match of source.matchAll(pattern))
+    pins[match[1]!] = (match[2] ?? match[3])!;
+  return pins;
+}
+
+/** Self-healing: a binary that drifted from the lock (a vendor self-updater
+ * rewrote it) is reinstalled from the locked artifact, then checked again.
+ */
+async function versionCheck(
+  agent: Agent,
+  pin: string | undefined,
+  run: Runner
+): Promise<Check> {
+  const matches = async () => {
+    const result = await run([agent.binary, '--version'], {
+      timeoutMs: 30_000,
+    });
+    return Boolean(pin) && result.ok && result.stdout.includes(pin!);
+  };
+  let ok = await matches();
+  if (!ok && pin) {
+    await run(
+      ['mise', 'install', '--locked', '--force', `${agent.pin}@${pin}`],
+      {
+        timeoutMs: 600_000,
+      }
+    );
+    ok = await matches();
+  }
+  return {
+    id: `agent:${agent.name}:version`,
+    status: ok ? 'pass' : 'fail',
+    summary: ok
+      ? `${agent.binary} ${pin} matches the shared toolchain lock.`
+      : 'AGENT_VERSION_MISMATCH',
+    ...(ok
+      ? {}
+      : {
+          remedy: {
+            action: `Every node runs the ${agent.binary} pinned in mise.toml/mise.lock; reinstalling it from the lock failed. Inspect mise install --locked ${agent.pin} on this node; never install it with a vendor self-updater.`,
+          },
+        }),
+  };
+}
+
+async function sessionCheck(
+  agent: Agent,
+  context: { node: string; workspace: string; cwd: string },
+  run: Runner
+): Promise<Check> {
+  const result = await run(
+    [
+      'bun',
+      join(context.workspace, 'packages/workstation/agents', agent.wrapper),
+      ...agent.args,
+    ],
+    {
+      cwd: context.cwd,
+      env: { WS_AGENT_NODE: context.node },
+      input: '',
+      timeoutMs: 150_000,
+    }
+  );
+  const expected = 'expect' in agent ? agent.expect : /\bOK\b/;
+  const ok = result.ok && expected.test(result.stdout);
+  return {
+    id: `agent:${agent.name}:session`,
+    status: ok ? 'pass' : 'fail',
+    summary: ok
+      ? `${agent.name} runs signed in through its T3 launcher with the shared account.`
+      : sessionFailure(agent, result.stderr + result.stdout),
+    ...(ok ? {} : { remedy: { action: sessionRemedy(agent) } }),
+  };
+}
+
+/** A stable code only; raw CLI output is never reported. */
+function sessionFailure(agent: Agent, output: string): string {
+  if (agent.name === 'cursor' && output.includes(CURSOR_KEY))
+    return 'AGENT_CURSOR_KEY_REQUIRED';
+  if (/missing or out of date/.test(output)) return 'AGENT_PROFILE_STALE';
+  if (/Required Vault secret unavailable/.test(output))
+    return 'AGENT_VAULT_UNAVAILABLE';
+  if (/model_not_found|unknown provider for model/.test(output))
+    return 'AGENT_MODEL_UNSERVED';
+  return 'AGENT_SESSION_UNVERIFIED';
+}
+
+function sessionRemedy(agent: Agent): string {
+  if (agent.name === 'cursor')
+    return `Cursor cannot use the CLI proxy; every node signs in as one shared Cursor account. Create a user API key in the Cursor dashboard and add it as ${CURSOR_KEY} to the vault OpenTofu root inputs (secret/personal/prd), apply that root, then rerun fleet-sync.`;
+  if (agent.name === 'antigravity')
+    return 'Antigravity needs the proxy model aliases for its catalog ids. Apply them once in a quiet moment with personal fleet-sync --maintenance (restarts the proxy briefly).';
+  return `Run the ${agent.name} launcher on this node to inspect it: WS_AGENT_NODE=<node> bun packages/workstation/agents/${agent.wrapper}. Check this node's Vault session and the shared proxy.`;
+}

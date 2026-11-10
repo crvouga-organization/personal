@@ -260,12 +260,43 @@ key/endpoint contract, encrypted recovery and runtime authentication. Moving it
 requires fencing the old host before restoring state
 ([migration](../../cliproxy-fleet/docs/migration.md)). Fleet never copies identities.
 
-Workstation applies Codex, Claude, Gemini and OpenCode proxy profiles. Claude’s
-explicit model is `claude-sonnet-4-6`. Pinned Gemini CLI 0.66.0 supports native
+### Agents on every node
+
+Every node (manager and workers) offers the same agents in T3, at the same
+versions (pinned in `mise.toml`/`mise.lock`, including the vendor CLIs
+`http:cursor-agent`, `http:grok` and `http:antigravity`), signed in to the same
+accounts. T3 launches each one through a tracked wrapper in
+`packages/workstation/agents/` that injects the shared credential from Vault at
+launch; no login, token or key is copied between nodes or written to disk.
+
+| Agent       | T3 driver     | Route                                                              |
+| ----------- | ------------- | ------------------------------------------------------------------ |
+| Claude      | `claudeAgent` | CLI proxy (`claude-proxy.ts`)                                      |
+| Codex       | `codex`       | CLI proxy (`codex-proxy.ts`)                                       |
+| Grok        | `grok`        | CLI proxy: Grok Build custom model, `env_key` (`grok-proxy.ts`)    |
+| Antigravity | `antigravity` | CLI proxy: Gemini API-key mode (`antigravity-proxy.ts`)            |
+| Muse        | `opencode`    | CLI proxy via OpenCode (`opencode-proxy.ts`)                       |
+| Cursor      | `cursor`      | One shared Cursor account: Vault `CURSOR_API_KEY` (no proxy route) |
+
+The CLI proxy multiplexes the provider accounts (fill-first), so every node
+shares them. Cursor's backend cannot be proxied; its shared key is an optional
+OpenTofu vault input until set, and fleet reports `AGENT_CURSOR_KEY_REQUIRED`
+until then. Native Muse Code is not used: it only talks to Meta's own catalog
+endpoint, so Muse models run through OpenCode. Antigravity sends its catalog
+ids (`gemini-3.8-flash`, `gemini-3.1-flash-lite-preview`); the proxy serves
+them from the Antigravity account through declared model aliases in
+`config.template.yaml`, applied once with `personal fleet-sync --maintenance`
+(`PROXY_CONFIG_PENDING` until then). Its default Pro model is not served; pick
+Gemini 3.8 Flash in T3.
+
+Each sync checks every agent per node (`agent:<name>:version` against the lock
+and `agent:<name>:session`, one tiny prompt through the T3 launcher; Cursor
+lists the account's models instead of spending inference). Failures do not stop
+other workers.
+
+Claude’s explicit model is `claude-sonnet-4-6`. Pinned Gemini CLI 0.66.0 supports native
 `gateway` authentication with `GOOGLE_GEMINI_BASE_URL` and a runtime Vault key;
-its request protocol is Gemini `generateContent`, not OpenAI Responses. Grok
-(`grok-4.7`) and Muse (`devin/muse-wonder-1-0`, served through Devin) are declared OpenCode harness routes,
-not invented native CLIs. Exact models live in `agents/registry.json` and must
+its request protocol is Gemini `generateContent`, not OpenAI Responses. Exact models live in `agents/registry.json` and must
 be present in the authenticated gateway catalog; no automatic model substitution.
 
 Apply runs bounded authenticated inference plus completed Responses streaming

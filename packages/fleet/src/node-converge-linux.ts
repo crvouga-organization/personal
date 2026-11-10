@@ -9,6 +9,7 @@ import { verifyResourceSafety } from '../../workstation/cli/lib/platform/resourc
 import { convergeT3Route } from '../../workstation/cli/lib/platform/t3-route';
 import { convergeProxy } from './proxy-converge';
 import { verifyFleetProviders } from '../../workstation/cli/lib/agents/fleet-verify';
+import { verifyNativeAgents } from '../../workstation/cli/lib/agents/native-verify';
 import { managedT3, managedT3Desktop } from '../../../scripts/dev/native-t3';
 import { convergeT3Service } from '../../workstation/cli/lib/platform/t3-service';
 import { userInfo } from 'node:os';
@@ -72,6 +73,11 @@ export async function convergeLinux(
   checks.push(
     ...(await attempt('provider:verification', () =>
       verifyFleetProviders(node)
+    ))
+  );
+  checks.push(
+    ...(await attempt('agent:verification', () =>
+      verifyNativeAgents(node, root, run)
     ))
   );
   checks.push(

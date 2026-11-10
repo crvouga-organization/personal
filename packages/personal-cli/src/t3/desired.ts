@@ -81,13 +81,30 @@ function expand(value: unknown, variables: Record<string, string>): unknown {
   return value;
 }
 
+/** Each managed driver accepts only the adapter fields fleet sets. Credentials
+ * never appear here: wrappers read them from Vault at launch. The values
+ * `fleet-cli-proxy` are non-secret placeholders that select a sign-in method.
+ */
+const DRIVERS: Record<
+  string,
+  { required: string[]; optional?: string[]; env?: string[] }
+> = {
+  codex: { required: ['binaryPath', 'homePath'] },
+  opencode: { required: ['binaryPath'] },
+  claudeAgent: { required: ['binaryPath', 'homePath'] },
+  grok: { required: ['binaryPath'], env: ['XAI_API_KEY'] },
+  cursor: { required: ['binaryPath'] },
+  antigravity: { required: ['binaryPath', 'authMethod', 'apiKey'] },
+};
+const PLACEHOLDER = 'fleet-cli-proxy';
+
 function validateInstance(id: string, value: unknown): void {
   const instance = object(JSON.stringify(value));
   const config = object(JSON.stringify(instance['config']));
-  const env = instance['environment'];
+  const driver = DRIVERS[String(instance['driver'])];
   if (
     !/^[a-zA-Z][a-zA-Z0-9_-]{0,63}$/.test(id) ||
-    !['codex', 'opencode'].includes(String(instance['driver'])) ||
+    !driver ||
     typeof instance['displayName'] !== 'string' ||
     typeof instance['enabled'] !== 'boolean' ||
     Object.keys(instance).some(
@@ -96,33 +113,43 @@ function validateInstance(id: string, value: unknown): void {
           key
         )
     ) ||
-    !validConfig(config, String(instance['driver'])) ||
-    !validEnvironment(env)
+    !validConfig(config, driver) ||
+    !validEnvironment(instance['environment'], driver.env ?? [])
   )
     throw new FleetUsageError(
-      'Invalid T3 instance definition; only the supported Codex/OpenCode adapter fields are accepted.'
+      'Invalid T3 instance definition; only the supported managed adapter fields are accepted.'
     );
 }
 
-function validConfig(config: Record<string, unknown>, driver: string): boolean {
+function validConfig(
+  config: Record<string, unknown>,
+  driver: { required: string[]; optional?: string[] }
+): boolean {
+  const allowed = [...driver.required, ...(driver.optional ?? [])];
   return (
-    Object.keys(config).every((key) =>
-      ['binaryPath', 'homePath'].includes(key)
-    ) &&
-    typeof config['binaryPath'] === 'string' &&
-    (driver === 'opencode'
-      ? config['homePath'] === undefined
-      : typeof config['homePath'] === 'string')
+    Object.keys(config).every((key) => allowed.includes(key)) &&
+    driver.required.every((key) => typeof config[key] === 'string') &&
+    (config['authMethod'] === undefined ||
+      config['authMethod'] === 'gemini-api-key') &&
+    (config['apiKey'] === undefined || config['apiKey'] === PLACEHOLDER)
   );
 }
 
-function validEnvironment(env: unknown): boolean {
-  if (!Array.isArray(env) || env.length !== 1) return false;
-  const variable = object(JSON.stringify(env[0]));
+function validEnvironment(env: unknown, placeholders: string[]): boolean {
+  if (!Array.isArray(env) || env.length !== 1 + placeholders.length)
+    return false;
+  const [node, ...rest] = env.map((item) => object(JSON.stringify(item)));
   return (
-    variable['name'] === 'WS_AGENT_NODE' &&
-    variable['value'] === '${node}' &&
-    variable['sensitive'] === false &&
-    Object.keys(variable).length === 3
+    node!['name'] === 'WS_AGENT_NODE' &&
+    node!['value'] === '${node}' &&
+    node!['sensitive'] === false &&
+    Object.keys(node!).length === 3 &&
+    rest.every(
+      (variable, index) =>
+        variable['name'] === placeholders[index] &&
+        variable['value'] === PLACEHOLDER &&
+        variable['sensitive'] === false &&
+        Object.keys(variable).length === 3
+    )
   );
 }

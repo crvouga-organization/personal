@@ -11,7 +11,7 @@ const SYNC_HINT =
   'Run personal fleet-sync from a terminal to repair this machine.';
 
 export async function runManagedProxy(
-  tool: 'codex' | 'opencode'
+  tool: 'codex' | 'opencode' | 'claude' | 'grok' | 'antigravity'
 ): Promise<void> {
   const args = process.argv.slice(2);
   // Version probes need no credentials; answering them lets T3 report the real

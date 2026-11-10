@@ -55,9 +55,9 @@ test('plain output is greppable: verdict, grid words and one line per problem', 
     'fleet-sync  ACTION REQUIRED  revision abcdef012345  in 1m05s'
   );
   expect(text).toMatch(
-    /^w1 +worker +· +PASS +· +PASS +FAIL +WARN +· +1 failing$/m
+    /^w1 +worker +· +PASS +· +PASS +FAIL +WARN +· +· +1 failing$/m
   );
-  expect(text).toMatch(/^w2 +worker +· +PASS +· +· +· +WARN +· +ready$/m);
+  expect(text).toMatch(/^w2 +worker +· +PASS +· +· +· +WARN +· +· +ready$/m);
   expect(text).toContain('1 failing   2 warnings   0 skipped   3 passing');
   expect(text).toContain('FAIL t3:paired-access  MANAGER_T3_LINK_UNVERIFIED');
   // The same warning on two nodes is printed once, naming both.

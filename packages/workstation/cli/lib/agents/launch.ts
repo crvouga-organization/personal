@@ -24,6 +24,9 @@ export async function launchProfile(
     'CLAUDE_CODE_USE_FOUNDRY',
     'CLIPROXY_API_KEY',
     'GOOGLE_GEMINI_BASE_URL',
+    'GROK_MODELS_BASE_URL',
+    'GROK_CODE_XAI_API_KEY',
+    'XAI_API_KEY',
   ])
     delete env[name];
   if (selection.profile === 'proxy') {
@@ -35,24 +38,53 @@ export async function launchProfile(
   if (selection.tool === 'opencode')
     env['OPENCODE_CONFIG'] = join(directory, 'opencode.json');
   if (selection.tool === 'gemini') env['GEMINI_CLI_HOME'] = directory;
-  const prefix =
-    selection.tool === 'claude'
-      ? ['--settings', join(directory, 'settings.json')]
-      : [];
-  const child = Bun.spawn([selection.tool, ...prefix, ...args], {
-    env,
-    stdin: 'inherit',
-    stdout: 'inherit',
-    stderr: 'inherit',
-  });
+  if (selection.tool === 'grok') {
+    env['GROK_HOME'] = directory;
+    env['GROK_DISABLE_AUTOUPDATER'] = '1';
+  }
+  if (selection.tool === 'antigravity')
+    // Only "true" disables Antigravity's in-place self-updater ("1" is ignored).
+    env['AGY_CLI_DISABLE_AUTO_UPDATE'] = 'true';
+  const child = Bun.spawn(
+    [selection.tool, ...launchArgs(selection, directory, args, env)],
+    {
+      env,
+      stdin: 'inherit',
+      stdout: 'inherit',
+      stderr: 'inherit',
+    }
+  );
   return child.exited;
+}
+
+/** Tool-specific arguments that select the rendered profile. */
+export function launchArgs(
+  selection: Selection,
+  directory: string,
+  args: string[],
+  env: NodeJS.ProcessEnv
+): string[] {
+  if (selection.tool === 'claude')
+    return ['--settings', join(directory, 'settings.json'), ...args];
+  if (selection.tool === 'antigravity') {
+    // Over ACP (how T3 runs it) T3 owns a private GEMINI_HOME and selects the
+    // Gemini API key method; the proxy key and endpoint come from this wrapper.
+    // Run directly, the fleet profile is the home; one-shot print mode only
+    // reads ~/.gemini, so it also runs with HOME set to the profile.
+    if (args[0] === 'acp') {
+      env['GEMINI_HOME'] ??= join(directory, '.gemini');
+      return ['acp', '--disable-telemetry', ...args.slice(1)];
+    }
+    env['HOME'] = directory;
+  }
+  return args;
 }
 
 function configureGatewayEnvironment(
   env: NodeJS.ProcessEnv,
   selection: Selection
 ): void {
-  if (selection.tool === 'gemini') {
+  if (selection.tool === 'gemini' || selection.tool === 'antigravity') {
     delete env['GOOGLE_GENAI_USE_VERTEXAI'];
     delete env['GOOGLE_GENAI_USE_GCA'];
     env['GOOGLE_GEMINI_BASE_URL'] = registry.proxy.endpoint;
