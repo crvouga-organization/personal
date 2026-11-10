@@ -4,6 +4,7 @@ import {
 } from './provider-errors';
 import { registry, type Selection } from './registry';
 import { proxyKey } from './secrets';
+import { VERIFY_OUTPUT_TOKENS } from './round-trip';
 
 export async function verifyProvider(
   selection: Selection,
@@ -89,7 +90,10 @@ async function validateOutput(
     );
 }
 
-/** Exact pinned clients use different wire protocols; model discovery is not inference. */
+/** Exact pinned clients use different wire protocols; model discovery is not inference.
+ * Output uses the same ceiling as the round trip: reasoning models (Muse) spend
+ * dozens of tokens before any text, so a tiny cap returns an empty output.
+ */
 export function inferenceRequest(selection: Selection): {
   path: string;
   body: object;
@@ -99,7 +103,7 @@ export function inferenceRequest(selection: Selection): {
       path: `/v1beta/models/${encodeURIComponent(selection.model)}:generateContent`,
       body: {
         contents: [{ role: 'user', parts: [{ text: 'Reply OK.' }] }],
-        generationConfig: { maxOutputTokens: 16 },
+        generationConfig: { maxOutputTokens: VERIFY_OUTPUT_TOKENS },
       },
     };
   if (selection.tool === 'claude')
@@ -107,12 +111,16 @@ export function inferenceRequest(selection: Selection): {
       path: '/v1/messages',
       body: {
         model: selection.model,
-        max_tokens: 16,
+        max_tokens: VERIFY_OUTPUT_TOKENS,
         messages: [{ role: 'user', content: 'Reply OK.' }],
       },
     };
   return {
     path: '/v1/responses',
-    body: { model: selection.model, max_output_tokens: 16, input: 'Reply OK.' },
+    body: {
+      model: selection.model,
+      max_output_tokens: VERIFY_OUTPUT_TOKENS,
+      input: 'Reply OK.',
+    },
   };
 }

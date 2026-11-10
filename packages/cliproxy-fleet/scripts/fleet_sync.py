@@ -69,6 +69,29 @@ def equivalent_source(installed, revision):
         return False
 
 
+# Files that define the running containers. Everything else (scripts, launchd
+# agents, clients, docs) updates without recreating the gateway, because
+# containers mount the stable install root, not a revision directory.
+GATEWAY_FILES = ('compose.yaml', 'image.lock.json')
+
+
+def restart_free(installed, revision):
+    """True when updating keeps the gateway running: same compose and images."""
+    if not isinstance(installed, str) or not re.fullmatch('[a-f0-9]{40}', installed):
+        return False
+    try:
+        specs = [commit + ':packages/cliproxy-fleet/' + name
+                 for name in GATEWAY_FILES for commit in (installed, revision)]
+        result = subprocess.run(['git', '-C', str(SCRIPTS.parents[2]), 'rev-parse', *specs],
+                                capture_output=True, text=True, timeout=15)
+        blobs = result.stdout.splitlines()
+        return (result.returncode == 0 and len(blobs) == len(specs)
+                and all(re.fullmatch('[a-f0-9]{40}', blob) for blob in blobs)
+                and all(blobs[i] == blobs[i + 1] for i in range(0, len(blobs), 2)))
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
 def inspect_worker(root, backend, run):
     """Client role. A local host is reported, never stopped."""
     live = [unit for unit in backend.units if any(backend.state(unit, run))]
@@ -108,7 +131,8 @@ def inspect(root, node, owner, revision, run=execute, audit_fn=audit, compatible
                       'Clean tracked installation and units', 'Missing or modified deployment')]
     if installed != revision and not compatible_fn(installed, revision):
         return [phase('PROXY_UPDATE_PENDING', 'action-required',
-                      'A proxy revision update can interrupt inference. Reapply with --maintenance in an approved window.',
+                      'This update changes the gateway container (compose.yaml or image pins), so applying it restarts the '
+                      'proxy and interrupts in-flight inference. Apply it in a quiet moment with: personal fleet-sync --maintenance',
                       revision, installed if isinstance(installed, str) and re.fullmatch('[0-9a-f]{40}', installed) else 'Unknown revision')]
     checks = []
     for unit in backend.units:
@@ -139,7 +163,8 @@ def endpoint_health(root):
 
 
 def reconcile(root, node, owner, revision, apply=False, maintenance=False, run=execute, audit_fn=audit,
-              endpoint_check=endpoint_health, compatible_fn=equivalent_source, backend=None, identity=None):
+              endpoint_check=endpoint_health, compatible_fn=equivalent_source, backend=None, identity=None,
+              restart_free_fn=restart_free):
     started = time.monotonic()
     backend = backend or cliproxy_host.backend()
     checks = inspect(root, node, owner, revision, run, audit_fn, compatible_fn, backend, identity)
@@ -148,7 +173,9 @@ def reconcile(root, node, owner, revision, apply=False, maintenance=False, run=e
     blocked = {'PROXY_PLATFORM_MISMATCH', 'PROXY_IDENTITY_MISMATCH', 'PROXY_RECOVERY_REQUIRED',
                'PROXY_SOURCE_DRIFT', 'PROXY_UPDATE_PENDING'}
     if apply and node == owner and not codes & (blocked - {'PROXY_UPDATE_PENDING'}):
-        if codes == {'PROXY_UPDATE_PENDING'} and maintenance:
+        if codes == {'PROXY_UPDATE_PENDING'} and (maintenance or restart_free_fn(checks[0]['observed'], revision)):
+            # Self-healing: updates that keep the gateway running apply on every
+            # sync; ones that recreate it wait for --maintenance.
             changed = run(backend.install(sys.executable, SCRIPTS, revision), 1500)
         elif not codes & blocked:
             for item in checks:

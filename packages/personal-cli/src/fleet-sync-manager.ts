@@ -6,6 +6,7 @@ import { convergeProxy } from '../../fleet/src/proxy-converge';
 import { attempt } from '../../fleet/src/node-converge-shared';
 import { verifyFleetProviders } from '../../workstation/cli/lib/agents/fleet-verify';
 import { convergeManagerHub } from '../../workstation/cli/lib/monitoring/manager-hub';
+import { enrollManagerMonitoring } from './fleet-sync-monitoring';
 import { desired, nodeId, paths } from './t3/desired';
 import { reconcileT3 } from './t3/reconcile';
 
@@ -15,7 +16,13 @@ import { reconcileT3 } from './t3/reconcile';
  */
 export async function convergeManager(
   definition: FleetDefinition,
-  input: { revision: string; apply: boolean; workspace: string },
+  input: {
+    revision: string;
+    apply: boolean;
+    workspace: string;
+    /** Also apply proxy updates that restart the gateway. */
+    maintenance?: boolean;
+  },
   run: Runner
 ): Promise<ManagerNode> {
   const started = Date.now();
@@ -43,13 +50,19 @@ export async function convergeManager(
     checks.push(
       ...(await convergeProxy(id, input.revision, run, {
         apply: input.apply,
+        maintenance: Boolean(input.maintenance),
         cwd: input.workspace,
       }))
     );
-    if (input.apply)
-      checks.push(
-        ...(await convergeManagerHub(input.workspace, definition, run))
-      );
+    if (input.apply) {
+      const hub = await convergeManagerHub(input.workspace, definition, run);
+      checks.push(...hub);
+      // The manager is always a monitored system on its own hub.
+      if (!hub.some(blocking))
+        checks.push(
+          ...(await enrollManagerMonitoring(definition, input.workspace, run))
+        );
+    }
   }
   return {
     node: id,

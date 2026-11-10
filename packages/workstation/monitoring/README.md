@@ -19,9 +19,15 @@ The fleet has exactly two roles (Fleet `definition.json`, version 3):
   URL. A worker refuses hub mode (`BESZEL_NOT_HUB`: the hub runs only on the
   manager) and an agent refuses any other hub URL (`BESZEL_HUB_MISMATCH`).
 
-`agent-darwin.yml` installs the same pinned binary on a macOS machine as a root
-launchd daemon with `KeepAlive`; `lock.json` carries the darwin checksums. It is
-best effort and less sandboxed than the Linux unit.
+The manager is always a monitored system on its own hub. After the hub converges,
+fleet-sync enrolls the manager like a worker and installs its agent locally with
+`agent-darwin.yml`: the same pinned binary (`lock.json` carries the darwin
+checksums) as a per-user launchd agent with `KeepAlive`
+(`~/Library/LaunchAgents/dev.chrisvouga.personal.beszel-agent.plist`, state under
+`~/Library/Application Support/personal-beszel-agent`). It needs no sudo, so
+fleet-sync stays unattended; it is less sandboxed than the Linux unit. It refuses
+to run beside a leftover root LaunchDaemon with the same label
+(`BESZEL_LEGACY_DAEMON`).
 
 ## Hub on the manager
 

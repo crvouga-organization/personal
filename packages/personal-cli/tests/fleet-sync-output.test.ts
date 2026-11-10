@@ -22,11 +22,11 @@ const report = (nodes: unknown[], applied = true) =>
     nodes,
   }) as unknown as ManagerReport;
 
-const rateLimited: Check = {
+const upstreamDown: Check = {
   id: 'provider:codex:inference',
   status: 'warn',
-  summary: 'PROVIDER_RATE_LIMITED',
-  remedy: { action: 'Quota resets on its own.' },
+  summary: 'PROVIDER_UPSTREAM_UNAVAILABLE',
+  remedy: { action: 'Retry later.' },
 };
 
 test('plain output is greppable: verdict, grid words and one line per problem', () => {
@@ -43,11 +43,11 @@ test('plain output is greppable: verdict, grid words and one line per problem', 
             summary: 'MANAGER_T3_LINK_UNVERIFIED',
             remedy: { action: 'Pair it.' },
           },
-          rateLimited,
+          upstreamDown,
         ],
         null as unknown as string
       ),
-      node('w2', [pass('ssh:fresh-session'), rateLimited]),
+      node('w2', [pass('ssh:fresh-session'), upstreamDown]),
     ]),
     { reportPath: '/r/last-sync.json', durationMs: 65_000 }
   );
@@ -61,7 +61,7 @@ test('plain output is greppable: verdict, grid words and one line per problem', 
   expect(text).toContain('1 failing   2 warnings   0 skipped   3 passing');
   expect(text).toContain('FAIL t3:paired-access  MANAGER_T3_LINK_UNVERIFIED');
   // The same warning on two nodes is printed once, naming both.
-  expect(text.match(/PROVIDER_RATE_LIMITED/g)).toHaveLength(1);
+  expect(text.match(/PROVIDER_UPSTREAM_UNAVAILABLE/g)).toHaveLength(1);
   expect(text).toContain('    on w1, w2');
   expect(text).toContain('    → Pair it.');
   expect(text).toContain('/r/last-sync.json');
@@ -69,9 +69,12 @@ test('plain output is greppable: verdict, grid words and one line per problem', 
 });
 
 test('warnings alone are a converged run, and color output adds symbols', () => {
-  const text = managerText(report([node('w1', [pass('ssh:a'), rateLimited])]), {
-    color: true,
-  });
+  const text = managerText(
+    report([node('w1', [pass('ssh:a'), upstreamDown])]),
+    {
+      color: true,
+    }
+  );
   expect(text).toContain('✔ CONVERGED');
   expect(text).toContain('▲');
   expect(text).toMatch(/\u001b\[/);
@@ -89,9 +92,12 @@ test('summaries split into a leading code and detail', () => {
 });
 
 test('a run with no failures never prints red', () => {
-  const text = managerText(report([node('w1', [pass('ssh:a'), rateLimited])]), {
-    color: true,
-  });
+  const text = managerText(
+    report([node('w1', [pass('ssh:a'), upstreamDown])]),
+    {
+      color: true,
+    }
+  );
   // Red (31) appears nowhere; the zero "failing" count is dimmed.
   expect(text).not.toMatch(/\u001b\[(?:\d+;)*31m/);
   expect(text).toMatch(/\u001b\[2m✖ 0 failing/);

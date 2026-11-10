@@ -240,7 +240,11 @@ proxy owner is `manager.id`. Flags: `--definition`, `--node`, `--revision`,
   `PROXY_IDENTITY_MISMATCH` unless the normalized `scutil --get LocalHostName`
   equals `manager.id`. Missing state is `PROXY_RECOVERY_REQUIRED` (fenced
   encrypted recovery only); drift is `PROXY_SOURCE_DRIFT`; a different
-  installed revision is `PROXY_UPDATE_PENDING` until `--maintenance`. With
+  installed revision installs automatically when `compose.yaml` and
+  `image.lock.json` are unchanged (containers mount the stable install root, so
+  the gateway keeps running); a revision that changes either one would
+  recreate the gateway and stays `PROXY_UPDATE_PENDING` until `--maintenance`
+  (`personal fleet-sync --maintenance`). With
   `--apply` it only loads stopped agents (`PROXY_UNIT_*`) or enables the
   connector (`PROXY_ENDPOINT_DISABLED`), then checks `PROXY_ENDPOINT_AUTH`.
 - **Workers:** `PROXY_CLIENT_ROLE` when clean. An active or enabled local proxy

@@ -1840,6 +1840,24 @@ Official feature references: [native agent](https://beszel.dev/guide/agent-insta
 [systemd](https://beszel.dev/guide/systemd), [network monitors](https://beszel.dev/guide/network-monitors),
 [REST API](https://beszel.dev/guide/rest-api), and [pinned release](https://github.com/henrygd/beszel/releases/tag/v0.21.1).
 
+## Repeat runs: warm and self-healing
+
+Every step is idempotent, and repeat runs skip work that cannot have changed:
+
+- Ansible playbooks (Ubuntu baseline, Tailscale, T3 desktop, worker recovery,
+  Beszel agents and the manager's hub) record a receipt after a successful apply:
+  a digest of the playbook sources and variables, never their values, under
+  `~/.local/state/personal/fleet/receipts`. A later run with the same digest
+  skips the playbook only while a cheap postcondition probe passes (services
+  active, hub healthy, agent running).
+- Any changed input, failed probe or failed apply runs the playbook in full,
+  and a receipt older than 24 hours is ignored, so drift a probe misses still
+  heals daily. If a skipped baseline's measured boot or resource policy fails,
+  the baseline is reapplied in full in the same run.
+- Provider inference checks run concurrently. Checks that prove the live
+  system (provider inference, T3 links, Beszel freshness) are never cached.
+- To force a full apply on one machine, delete its receipt directory.
+
 ## Failure, retry and recovery
 
 | Stable outcome                                                                           | Read-only diagnosis and source-owned remedy                                                                                                                                                                              |

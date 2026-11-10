@@ -198,7 +198,7 @@ function parseEvidence(result: {
   return null;
 }
 
-async function trackedScript(
+export async function trackedScript(
   source: string,
   revision: string,
   path: string,

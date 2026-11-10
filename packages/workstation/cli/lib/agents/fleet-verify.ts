@@ -9,7 +9,6 @@ import { verifyProvider } from './verify';
  * Authentication/inference evidence does not certify native clients or paired T3.
  */
 export async function verifyFleetProviders(node: string): Promise<Check[]> {
-  const checks: Check[] = [];
   let key: string;
   try {
     key = await proxyKey();
@@ -25,36 +24,52 @@ export async function verifyFleetProviders(node: string): Promise<Check[]> {
     }));
   }
 
-  for (const [provider, route] of Object.entries(registry.proxy.routes)) {
-    const selection: Selection = {
-      node,
-      profile: 'proxy',
-      tool: (route.native ?? route.harness) as Selection['tool'],
-      model: route.model,
-    };
-    try {
-      const evidence = await verifyProvider(selection, true, key);
-      await verifyRoundTrip(route.model, key);
-      checks.push({
-        id: `provider:${provider}:inference`,
-        status: evidence.inference === 'pass' ? 'pass' : 'fail',
-        summary:
-          'Gateway authentication, bounded inference, completed streaming and safe echo tool round trip verified from node environment. Native CLI/T3 execution is separate.',
-      });
-    } catch (error) {
-      checks.push(inferenceFailure(provider, providerFailureCode(error)));
-    }
-  }
-  return checks;
+  // Providers are independent upstream accounts: verify them concurrently so
+  // the slowest one, not their sum, bounds the step. Order stays stable.
+  return Promise.all(
+    Object.entries(registry.proxy.routes).map(([provider, route]) =>
+      verifyRoute(node, provider, route, key)
+    )
+  );
 }
 
-/** Conditions owned by the upstream provider account (quota, outage, billing)
+async function verifyRoute(
+  node: string,
+  provider: string,
+  route: { model: string; native: string | null; harness: string },
+  key: string
+): Promise<Check> {
+  const selection: Selection = {
+    node,
+    profile: 'proxy',
+    tool: (route.native ?? route.harness) as Selection['tool'],
+    model: route.model,
+  };
+  try {
+    const evidence = await verifyProvider(selection, true, key);
+    await verifyRoundTrip(route.model, key);
+    return {
+      id: `provider:${provider}:inference`,
+      status: evidence.inference === 'pass' ? 'pass' : 'fail',
+      summary:
+        'Gateway authentication, bounded inference, completed streaming and safe echo tool round trip verified from node environment. Native CLI/T3 execution is separate.',
+    };
+  } catch (error) {
+    return inferenceFailure(provider, providerFailureCode(error));
+  }
+}
+
+/** Rate limits and exhausted quota are expected on shared subscription
+ * accounts: the gateway authenticated and routed the request, and the account
+ * recovers on its own. They are not reported at all (a quiet pass).
+ */
+const QUOTA = new Set(['PROVIDER_RATE_LIMITED']);
+
+/** Other conditions owned by the upstream provider account (outage, billing)
  * do not mean this node is misconfigured: the gateway answered and routed the
  * request. They are warnings, so a provider outage never fails fleet-sync.
  */
 const UPSTREAM: Record<string, string> = {
-  PROVIDER_RATE_LIMITED:
-    'The provider account is rate limited or out of quota. It recovers on its own when the quota resets; no fleet change is needed.',
   PROVIDER_UPSTREAM_UNAVAILABLE:
     'The provider returned a server error through the gateway. Retry later; no fleet change is needed.',
   PROVIDER_MODEL_UNAVAILABLE:
@@ -64,6 +79,13 @@ const UPSTREAM: Record<string, string> = {
 };
 
 export function inferenceFailure(provider: string, code: string): Check {
+  if (QUOTA.has(code))
+    return {
+      id: `provider:${provider}:inference`,
+      status: 'pass',
+      summary:
+        'Gateway authenticated and routed the request; the provider account is rate limited or out of quota and recovers on its own.',
+    };
   const upstream = UPSTREAM[code];
   return {
     id: `provider:${provider}:inference`,

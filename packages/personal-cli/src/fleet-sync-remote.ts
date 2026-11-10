@@ -83,6 +83,7 @@ export async function selected(
           {
             revision: options.revision!,
             apply: Boolean(options.apply),
+            maintenance: Boolean(options.maintenance),
             workspace: settings.workspace,
           },
           run
