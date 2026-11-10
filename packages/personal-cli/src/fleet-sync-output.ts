@@ -119,7 +119,17 @@ export function managerText(
       `${c.dim('tailnet  ')}  ${report.candidates} unmanaged device(s) seen; discovery never enrolls them`
     );
   if (!report.applied) lines.push(c.dim('No node deployment was performed.'));
-  return lines.join('\n');
+  return stableUrls(lines.join('\n'));
+}
+
+const TAILNET_URL =
+  /\bhttps?:\/\/[a-z0-9.-]+\.ts\.net(?::\d+)?(?:\/[^\s'",;)]*[^\s'",;).])?/gi;
+
+/** Printed output names only stable public URLs (*.chrisvouga.dev). A tailnet
+ * MagicDNS address in any summary or remedy is replaced, never shown.
+ */
+export function stableUrls(text: string): string {
+  return text.replace(TAILNET_URL, 'its private tailnet address');
 }
 
 const SECTION: Record<'fail' | 'warn' | 'skip', string> = {

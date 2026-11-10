@@ -17,7 +17,7 @@ const report = (nodes: unknown[], applied = true) =>
     desiredRevision: 'abcdef0123456789',
     applied,
     candidates: 0,
-    dashboardUrl: 'https://hub.example.ts.net:8443',
+    dashboardUrl: 'https://beszel.chrisvouga.dev',
     checks: [],
     nodes,
   }) as unknown as ManagerReport;
@@ -101,4 +101,24 @@ test('a run with no failures never prints red', () => {
   // Red (31) appears nowhere; the zero "failing" count is dimmed.
   expect(text).not.toMatch(/\u001b\[(?:\d+;)*31m/);
   expect(text).toMatch(/\u001b\[2m✖ 0 failing/);
+});
+
+test('printed output names only stable public URLs, never tailnet addresses', () => {
+  const text = managerText(
+    report([
+      node('w1', [
+        {
+          id: 'beszel:hub',
+          status: 'fail',
+          summary: 'BESZEL_HUB_UNREACHABLE',
+          remedy: {
+            action:
+              'The hub is not at https://mgr.tail4829dc.ts.net:8443. Inspect it.',
+          },
+        },
+      ]),
+    ])
+  );
+  expect(text).not.toMatch(/ts\.net/);
+  expect(text).toContain('its private tailnet address. Inspect it.');
 });

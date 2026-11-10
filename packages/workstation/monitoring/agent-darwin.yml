@@ -79,11 +79,18 @@
         checksum: 'sha256:{{ beszel_lock.agents[beszel_arch] }}'
         mode: '0644'
         timeout: 60
-    - name: Extract the pinned executable and repair file drift
-      ansible.builtin.unarchive:
-        src: '{{ beszel_root }}/agent.tar.gz'
-        dest: '{{ beszel_root }}'
-        remote_src: true
+      register: agent_archive
+    - name: Inspect the extracted executable
+      ansible.builtin.stat:
+        path: '{{ beszel_root }}/beszel-agent'
+      register: agent_binary
+    # ansible.builtin.unarchive requires GNU tar; macOS ships BSD tar, which
+    # extracts this checksum-verified archive natively.
+    - name: Extract the pinned executable when new or missing
+      ansible.builtin.command:
+        argv: [/usr/bin/tar, -xzf, '{{ beszel_root }}/agent.tar.gz', -C, '{{ beszel_root }}', beszel-agent]
+      when: agent_archive.changed or not agent_binary.stat.exists or not agent_binary.stat.executable
+      changed_when: true
       notify: Restart agent
     - name: Install the source-owned always-on launch agent
       ansible.builtin.copy:

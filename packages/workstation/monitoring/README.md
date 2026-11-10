@@ -43,7 +43,9 @@ when you sign in_. It refuses to replace a different existing image
   (`0600`).
 
 The dashboard is `https://<manager-MagicDNS-name>:8443`
-(`hubUrl(definition)`), linked in the consolidated CLI result. The Compose port is
+(`hubUrl(definition)`), used by agents and checks. CLI output only ever prints
+the stable public dashboard, `https://beszel.chrisvouga.dev`; tailnet addresses
+are never printed. The Compose port is
 loopback-only; Tailscale Serve (`tailscale serve --bg --https=8443
 http://127.0.0.1:8090`, using `tailscale` on PATH or the app's
 `/Applications/Tailscale.app/Contents/MacOS/Tailscale`) provides private HTTPS.

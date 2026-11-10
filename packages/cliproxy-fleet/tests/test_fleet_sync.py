@@ -116,6 +116,25 @@ class FleetSingleton(unittest.TestCase):
         self.assertTrue(self.calls[0][2].endswith('install.py'))
         self.assertEqual(self.calls[0][-2:], ['--revision', SHA])
 
+    def test_endpoint_check_retries_a_reconnecting_route(self):
+        self.runtime()
+        self.link_agents()
+        answers = iter([False, False, True])
+        waits = []
+        result = self.owner(run=self.active, audit_fn=lambda root: (True, SHA),
+                            endpoint_check=lambda root: next(answers), sleep=waits.append)
+        self.assertTrue(result['ok'])
+        self.assertEqual(waits, [10, 10])
+
+    def test_endpoint_failure_is_reported_after_bounded_retries(self):
+        self.runtime()
+        self.link_agents()
+        waits = []
+        result = self.owner(run=self.active, audit_fn=lambda root: (True, SHA),
+                            endpoint_check=lambda root: False, sleep=waits.append)
+        self.assertFalse(result['ok'])
+        self.assertEqual(len(waits), 5)
+
     def test_restart_free_requires_known_revisions(self):
         self.assertFalse(fleet.restart_free('Unknown revision', SHA))
         self.assertFalse(fleet.restart_free(None, SHA))

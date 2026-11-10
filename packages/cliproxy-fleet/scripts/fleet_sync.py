@@ -162,9 +162,20 @@ def endpoint_health(root):
         return False
 
 
+def endpoint_verified(root, endpoint_check, attempts=6, delay=10, sleep=time.sleep):
+    """The public route can take a few seconds to reconnect after a start or
+    update; a bounded retry keeps that from reading as a failure."""
+    for attempt in range(attempts):
+        if endpoint_check(root):
+            return True
+        if attempt + 1 < attempts:
+            sleep(delay)
+    return False
+
+
 def reconcile(root, node, owner, revision, apply=False, maintenance=False, run=execute, audit_fn=audit,
               endpoint_check=endpoint_health, compatible_fn=equivalent_source, backend=None, identity=None,
-              restart_free_fn=restart_free):
+              restart_free_fn=restart_free, sleep=time.sleep):
     started = time.monotonic()
     backend = backend or cliproxy_host.backend()
     checks = inspect(root, node, owner, revision, run, audit_fn, compatible_fn, backend, identity)
@@ -192,7 +203,7 @@ def reconcile(root, node, owner, revision, apply=False, maintenance=False, run=e
                     changed = run([sys.executable, '-B', str(root / 'scripts/public-endpoint'), 'enable']) or changed
         checks = inspect(root, node, owner, revision, run, audit_fn, compatible_fn, backend, identity)
     if node == owner and all(item['status'] == 'unchanged' for item in checks):
-        verified = endpoint_check(root)
+        verified = endpoint_verified(root, endpoint_check, sleep=sleep)
         checks.append(phase('PROXY_ENDPOINT_AUTH', 'unchanged' if verified else 'action-required',
                             'Verify the existing endpoint/client credential. Provider inference is a separate gate; routine checks never attempt management logins.',
                             'Authenticated public gateway client route',
