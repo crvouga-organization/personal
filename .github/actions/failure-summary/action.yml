@@ -1,0 +1,24 @@
+name: Failure summary
+description: Summarize the failed step (what, file:line, repro command) for the job summary and the sticky PR comment.
+inputs:
+  name:
+    required: true
+    description: Job display name used in the summary.
+  key:
+    default: main
+    description: Unique suffix for the artifact (matrix value) within the run.
+runs:
+  using: composite
+  steps:
+    - name: Write failure summary
+      shell: bash
+      env:
+        JOB_NAME: ${{ inputs.name }}
+      run: node scripts/ci/failure-summary.mjs
+    - name: Upload failure summary for the PR comment
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+      with:
+        name: ci-summary-${{ github.job }}-${{ inputs.key }}
+        path: ${{ runner.temp }}/ci-summary
+        if-no-files-found: ignore
+        retention-days: 7
