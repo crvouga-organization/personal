@@ -29,9 +29,9 @@
     "Codex / Agent Skills"
   ],
   "aiCoAuthorTrailers": {
-    "asOfCommit": "a67cadf4e38f9560c29e9e1c7acca6de08050eaf",
-    "asOfDate": "2026-11-14T00:00:55Z",
-    "commits": 2008,
+    "asOfCommit": "280e054d72db6dac1637107cecac442c857c2263",
+    "asOfDate": "2026-11-14T13:06:23Z",
+    "commits": 2009,
     "byTool": [
       { "tool": "Claude Code", "trailers": 199 },
       { "tool": "Cursor", "trailers": 78 }
