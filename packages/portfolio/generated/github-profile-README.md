@@ -10,7 +10,7 @@ Senior full-stack engineer on member-facing health and education products; previ
 
 - **gamezilla.app** ([case study](https://www.chrisvouga.dev/projects/gamezilla/)): Local-first multiplayer game app defined by 2,702 executable spec scenarios and 129 formal state models that every pull request must pass.
 - **Workspace platform** ([case study](https://www.chrisvouga.dev/projects/workspace-platform/), [code](https://github.com/crvouga/personal)): Runs 26 services on OpenTofu-only infrastructure; 7 CI jobs gate every merge, and 43 of 194 pull requests failed CI before merging green.
-- **Mockingbird** ([case study](https://www.chrisvouga.dev/projects/mockingbird/), [code](https://github.com/crvouga/mockingbird)): 125 stateful vendor-API emulators, published to npm and checked against the vendors’ OpenAPI contracts by property-based parity tests.
+- **Mockingbird** ([case study](https://www.chrisvouga.dev/projects/mockingbird/), [code](https://github.com/crvouga/mockingbird)): 127 stateful vendor-API emulators, published to npm and checked against the vendors’ OpenAPI contracts by property-based parity tests.
 
 ## How I build
 
