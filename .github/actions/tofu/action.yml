@@ -45,7 +45,7 @@ runs:
       with:
         tofu_version: 1.13.0
         tofu_wrapper: false
-    - uses: ariga/setup-atlas@28f0b75814c08b1a265b75713c120cfad46433ae # v0.5
+    - uses: ariga/setup-atlas@c2de7bd12ab9f9a143ae5a6280b5b416c7c43021 # v0.6
       if: inputs.root == 'foundation' && env.CI_ATLAS_READY != 'true'
     - name: Remember Atlas setup for this job
       if: inputs.root == 'foundation'

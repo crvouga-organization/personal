@@ -207,7 +207,7 @@ jobs:
           check:scripts
       - name: Install gitleaks from the mise pin
         if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
-        uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
+        uses: jdx/mise-action@d5574b52816a478f9d4e6529a3f6ff17a8a36785 # v5.2.8
         with:
           version: '2026.10.24'
           install: false
@@ -268,7 +268,7 @@ jobs:
           '--affected' || '' }}
       - name: Set up Atlas
         if: matrix.task == 'tests'
-        uses: ariga/setup-atlas@28f0b75814c08b1a265b75713c120cfad46433ae # v0.5
+        uses: ariga/setup-atlas@c2de7bd12ab9f9a143ae5a6280b5b416c7c43021 # v0.6
       - name: Plan browser installation
         id: browsers
         if: matrix.task == 'tests'
@@ -334,7 +334,7 @@ jobs:
           tofu_version: 1.13.0
           tofu_wrapper: false
       - name: Set up Atlas
-        uses: ariga/setup-atlas@28f0b75814c08b1a265b75713c120cfad46433ae # v0.5
+        uses: ariga/setup-atlas@c2de7bd12ab9f9a143ae5a6280b5b416c7c43021 # v0.6
       - name: Cache verified providers
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -389,7 +389,7 @@ jobs:
         run: python3 packages/auth-relay/tests/production-image.py
       - name: Set up Atlas
         if: matrix.suite == 'compatibility'
-        uses: ariga/setup-atlas@28f0b75814c08b1a265b75713c120cfad46433ae # v0.5
+        uses: ariga/setup-atlas@c2de7bd12ab9f9a143ae5a6280b5b416c7c43021 # v0.6
       - name: Set up OpenTofu
         if: matrix.suite == 'compatibility'
         uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
