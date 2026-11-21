@@ -3,7 +3,7 @@
 # repository's fleet.json. The fleet code lives in the repository that
 # fleet.json names under source.repository; nothing of it is copied here.
 # The pin is a commit, not the npm version dev-fleet documents, until a release
-# names its commit: https://github.com/crvouga/dev-fleet/issues/17
+# names its commit: https://github.com/crvouga-organization/dev-fleet/issues/17
 set -eu
 root=$(cd "$(dirname "$0")/../.." && pwd)
 revision=$(tr -d '[:space:]' <"$root/fleet.revision")

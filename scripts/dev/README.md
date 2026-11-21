@@ -12,14 +12,14 @@ install the toolchain.
 macOS / Linux, in Bash (download first so the script is reviewable):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/crvouga/personal/main/scripts/dev/bootstrap.sh -o /tmp/workspace-bootstrap.sh
+curl -fsSL https://raw.githubusercontent.com/crvouga-organization/personal/main/scripts/dev/bootstrap.sh -o /tmp/workspace-bootstrap.sh
 bash /tmp/workspace-bootstrap.sh
 ```
 
 Native Windows, in x64 PowerShell (5.1 or newer):
 
 ```powershell
-Invoke-WebRequest https://raw.githubusercontent.com/crvouga/personal/main/scripts/dev/bootstrap.ps1 -OutFile "$env:TEMP\workspace-bootstrap.ps1"
+Invoke-WebRequest https://raw.githubusercontent.com/crvouga-organization/personal/main/scripts/dev/bootstrap.ps1 -OutFile "$env:TEMP\workspace-bootstrap.ps1"
 & "$env:TEMP\workspace-bootstrap.ps1"
 ```
 
@@ -269,7 +269,7 @@ without pulling or touching project dependencies; `personal workstation tools ch
 them. Sync is explicit; Git commits do not silently update other machines.
 
 Multiple development computers are kept in sync by
-[dev-fleet](https://github.com/crvouga/dev-fleet), run from this checkout at the
+[dev-fleet](https://github.com/crvouga-organization/dev-fleet), run from this checkout at the
 pinned `fleet.revision` with `fleet.json` (see [T3 project actions](#t3-project-actions)).
 Fleet machines get their toolchain from dev-fleet's own pins, not from this file:
 when the global mise config carries dev-fleet's marker, setup installs this
@@ -317,7 +317,7 @@ Actions: `warm`, `portfolio`, `workstation-sync`,
 `workstation-net-fix-check`, `fleet-sync`, `fleet-preview`, `fleet-status`,
 `fleet-health`, `fleet-repair`, `fleet-t3-status`, `infra-cliproxy`.
 Workstation actions run the `personal workstation` command of the same name. The
-fleet actions and `infra-cliproxy` run [dev-fleet](https://github.com/crvouga/dev-fleet)
+fleet actions and `infra-cliproxy` run [dev-fleet](https://github.com/crvouga-organization/dev-fleet)
 at the commit pinned in `fleet.revision`, with this repository's `fleet.json`, through
 `scripts/dev/fleet.sh`. Label each T3 script `Domain: Command words` (`Fleet: Sync`,
 `Fleet: Preview`, `Fleet: Health`, `Workstation: Net check`, `Infra: Cliproxy model health`

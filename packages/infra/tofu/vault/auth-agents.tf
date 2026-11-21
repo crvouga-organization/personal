@@ -49,6 +49,18 @@ resource "vault_policy" "auth_agent" {
   HCL
 }
 
+# A credential bound to a repo of a moved owner also matches the repo under
+# every alias of that owner (see local.github_owners).
+locals {
+  auth_agent_bound_claims = { for id, credential in var.auth_agent_credentials : id => (
+    contains(local.github_owners, split("/", credential.repository)[0]) ? {
+      repository = join(",", [for owner in local.github_owners : "${owner}/${split("/", credential.repository)[1]}"])
+      sub = join(",", [for owner in local.github_owners :
+      "repo:${owner}/${split("/", credential.repository)[1]}${trimprefix(credential.subject, "repo:${credential.repository}")}"])
+    } : { repository = credential.repository, sub = credential.subject }
+  ) }
+}
+
 resource "vault_jwt_auth_backend_role" "auth_agent" {
   for_each                = var.auth_agent_credentials
   backend                 = vault_jwt_auth_backend.github.path
@@ -57,7 +69,7 @@ resource "vault_jwt_auth_backend_role" "auth_agent" {
   user_claim              = "sub"
   bound_audiences         = [local.vault_addr]
   bound_claims_type       = "string"
-  bound_claims            = { repository = each.value.repository, sub = each.value.subject }
+  bound_claims            = local.auth_agent_bound_claims[each.key]
   token_policies          = [vault_policy.auth_agent[each.key].name]
   token_ttl               = 300
   token_max_ttl           = 600

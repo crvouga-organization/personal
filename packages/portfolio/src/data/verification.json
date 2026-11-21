@@ -28,7 +28,7 @@
   "repos": [
     {
       "repo": "crvouga/mockingbird",
-      "url": "https://github.com/crvouga/mockingbird",
+      "url": "https://github.com/crvouga-organization/mockingbird",
       "defaultBranch": "main",
       "stars": 5,
       "commits": 1445,
@@ -37,12 +37,12 @@
       "license": null,
       "defaultBranchCiWorkflow": "CI",
       "defaultBranchCiConclusion": "failure",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga/mockingbird/actions/runs/44329525302",
+      "defaultBranchCiRunUrl": "https://github.com/crvouga-organization/mockingbird/actions/runs/44329525302",
       "defaultBranchCiCompletedAt": "2026-11-18T15:12:39Z"
     },
     {
       "repo": "crvouga/headless-combobox",
-      "url": "https://github.com/crvouga/headless-combobox",
+      "url": "https://github.com/crvouga-organization/headless-combobox",
       "defaultBranch": "main",
       "stars": 46,
       "commits": 344,
@@ -51,12 +51,12 @@
       "license": null,
       "defaultBranchCiWorkflow": "CD",
       "defaultBranchCiConclusion": "success",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga/headless-combobox/actions/runs/21232438172",
+      "defaultBranchCiRunUrl": "https://github.com/crvouga-organization/headless-combobox/actions/runs/21232438172",
       "defaultBranchCiCompletedAt": "2026-11-17T07:39:15Z"
     },
     {
       "repo": "crvouga/personal",
-      "url": "https://github.com/crvouga/personal",
+      "url": "https://github.com/crvouga-organization/personal",
       "defaultBranch": "main",
       "stars": 1,
       "commits": 2015,
@@ -65,7 +65,7 @@
       "license": null,
       "defaultBranchCiWorkflow": "CI",
       "defaultBranchCiConclusion": "success",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga/personal/actions/runs/44530084607",
+      "defaultBranchCiRunUrl": "https://github.com/crvouga-organization/personal/actions/runs/44530084607",
       "defaultBranchCiCompletedAt": "2026-11-19T13:15:40Z"
     }
   ],

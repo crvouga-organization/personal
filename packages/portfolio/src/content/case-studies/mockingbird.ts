@@ -1,6 +1,6 @@
 import type { CaseStudy } from './types';
 
-const REPO = 'https://github.com/crvouga/mockingbird';
+const REPO = 'https://github.com/crvouga-organization/mockingbird';
 
 export const MOCKINGBIRD_CASE_STUDY: CaseStudy = {
   projectId: 'mockingbird',

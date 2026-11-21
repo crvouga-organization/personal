@@ -11,7 +11,7 @@ Canonical deployed URL: {{localGuideUrl}} · Index of both guides: {{siteGuideUr
 | Question | Local (this guide) | Cloud (the other guide) |
 | --- | --- | --- |
 | Where does it run? | A developer's computer or a fleet node | Railway, Cloudflare, managed PostgreSQL, GHCR, GitHub Actions |
-| Who owns it? | mise (`mise.toml`, `mise.lock`), `packages/workstation`, [dev-fleet](https://github.com/crvouga/dev-fleet) with this repository's `fleet.json` | OpenTofu in `{{infraRepo}}` only |
+| Who owns it? | mise (`mise.toml`, `mise.lock`), `packages/workstation`, [dev-fleet](https://github.com/crvouga-organization/dev-fleet) with this repository's `fleet.json` | OpenTofu in `{{infraRepo}}` only |
 | How is it changed? | The documented local commands below, when the user asks for machine setup | A GitHub issue on `{{infraRepo}}`, then a reviewed OpenTofu PR |
 
 Rules:
@@ -44,7 +44,7 @@ the agent catalog. See {{path:packages/personal-cli/README.md}}.
 
 The fleet (one macOS manager, stateless Ubuntu workers), T3 provider instances,
 Beszel monitoring and the private CLIProxyAPI service are managed by
-[dev-fleet](https://github.com/crvouga/dev-fleet); none of that code lives here.
+[dev-fleet](https://github.com/crvouga-organization/dev-fleet); none of that code lives here.
 This repository holds only this fleet's configuration, {{path:fleet.json}}, and the
 dev-fleet commit it runs, {{path:fleet.revision}}. From the checkout:
 
@@ -66,7 +66,7 @@ off to the manager over SSH. `fleet-sync`, `fleet-node-sync`, `t3-apply` and
 
 Never edit dev-fleet, a checkout it owns or a file it manages on a machine. A
 defect or a missing feature is an issue at
-https://github.com/crvouga/dev-fleet/issues, without credentials, hostnames,
+https://github.com/crvouga-organization/dev-fleet/issues, without credentials, hostnames,
 accounts, domains or `fleet.json` contents.
 
 Change fleet behaviour in dev-fleet, then bump `fleet.revision`. Change machines,

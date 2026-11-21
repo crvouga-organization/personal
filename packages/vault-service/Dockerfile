@@ -6,7 +6,7 @@ RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /health-proxy ./health-
 
 FROM quay.io/openbao/openbao:latest
 
-LABEL org.opencontainers.image.source="https://github.com/crvouga/infra"
+LABEL org.opencontainers.image.source="https://github.com/crvouga-organization/personal"
 LABEL org.opencontainers.image.description="Standalone OpenBao vault for chrisvouga.dev"
 
 USER root
