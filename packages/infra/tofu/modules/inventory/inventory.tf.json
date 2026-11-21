@@ -805,7 +805,7 @@
         "redirect_ruleset_name": "Redirect rules ruleset"
       },
       "railway": {
-        "project": "Workspace",
+        "project": "personal",
         "environment": "production",
         "region": "us-west2"
       },

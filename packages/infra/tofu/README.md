@@ -230,7 +230,7 @@ Atlas migrations, tables and migration history. Existing schemas without this
 opt-in remain externally owned; no legacy schema is adopted implicitly.
 
 The `moviefinder` entry allocates the new namespace for `crvouga-organization/moviefinder` and
-hosts its image in the existing Workspace Railway project. It preserves all
+hosts its image in the existing personal Railway project. It preserves all
 three legacy MovieFinder deployments. The foundation already feeds the same
 opaque DATABASE_URL into dev and prd; this change does not alter that platform
 contract or claim separate physical databases. MovieFinder local development
