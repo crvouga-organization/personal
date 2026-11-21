@@ -15,6 +15,7 @@ import { CASE_STUDIES } from '../src/content/case-studies';
 import { ARCHIVE_PROJECTS, PROJECTS } from '../src/content/project';
 import { WORK } from '../src/content/work';
 import { writeLine } from '../src/library/cli-output';
+import { githubCommitApiUrl } from '../src/library/github-commit-url';
 
 type UrlCheckResult = {
   url: string;
@@ -76,11 +77,34 @@ function isBotProtected(url: string, status: number): boolean {
   return BOT_PROTECTED_STATUSES[host]?.includes(status) ?? false;
 }
 
+/**
+ * github.com answers commit pages (rendered diffs) with 503 to GitHub-hosted
+ * runners under load, so a commit link is checked through the REST API
+ * instead, which also proves the commit exists. A fragment (`#diff-…`) is
+ * never sent over HTTP, so the page check could not verify it either.
+ */
+function githubApiHeaders(): Record<string, string> {
+  const token = process.env['GITHUB_TOKEN'] ?? process.env['GH_TOKEN'];
+  return {
+    accept: 'application/vnd.github.sha',
+    'x-github-api-version': '2022-11-28',
+    ...(token ? { authorization: `Bearer ${token}` } : {}),
+  };
+}
+
 async function fetchOnce(
   url: string,
   method: 'HEAD' | 'GET',
   timeoutMs: number
 ): Promise<{ status: number; ok: boolean }> {
+  const apiUrl = githubCommitApiUrl(url);
+  if (apiUrl) {
+    const response = await fetch(apiUrl, {
+      headers: githubApiHeaders(),
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    return { status: response.status, ok: response.ok };
+  }
   const response = await fetch(url, {
     method,
     redirect: 'follow',
