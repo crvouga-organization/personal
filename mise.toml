@@ -35,15 +35,15 @@ docker-cli = "29.9.2"
 "npm:vercel" = "65.8.0"
 "npm:wrangler" = "4.156.0"
 railway = "5.71.0"
-"aqua:anomalyco/opencode" = "1.19.5"
+"aqua:anomalyco/opencode" = "1.19.6"
 vault = "2.2.1"
-claude = "2.1.314"
-codex = "0.166.0"
-gemini = { version = "0.66.0", allow_builds = ["@lydell/node-pty"] }
-copilot = "1.0.105"
+claude = "2.1.330"
+codex = "0.171.0"
+gemini = { version = "0.70.0", allow_builds = ["@lydell/node-pty"] }
+copilot = "1.0.114"
 # Agent CLIs without a registry backend: exact vendor artifacts, checksums in mise.lock.
-"http:grok" = { version = "1.0.77", os = ["linux", "macos"], bin = "grok", platforms = { linux-x64 = { url = "https://x.ai/cli/grok-{{version}}-linux-x86_64" }, linux-arm64 = { url = "https://x.ai/cli/grok-{{version}}-linux-aarch64" }, macos-x64 = { url = "https://x.ai/cli/grok-{{version}}-macos-x86_64" }, macos-arm64 = { url = "https://x.ai/cli/grok-{{version}}-macos-aarch64" } } }
-"http:antigravity" = { version = "1.5.3", os = ["linux", "macos"], bin = "antigravity", platforms = { linux-x64 = { url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-x64/cli_linux_x64.tar.gz" }, linux-arm64 = { url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/linux-arm/cli_linux_arm64.tar.gz" }, macos-x64 = { url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/darwin-x64/cli_mac_x64.tar.gz" }, macos-arm64 = { url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.3-6604829099950080/darwin-arm/cli_mac_arm64.tar.gz" } } }
+"http:grok" = { version = "1.0.92", bin = "grok", platforms = { linux-x64 = { url = "https://x.ai/cli/grok-{{version}}-linux-x86_64" }, linux-arm64 = { url = "https://x.ai/cli/grok-{{version}}-linux-aarch64" }, macos-x64 = { url = "https://x.ai/cli/grok-{{version}}-macos-x86_64" }, macos-arm64 = { url = "https://x.ai/cli/grok-{{version}}-macos-aarch64" } }, os = ["linux", "macos"] }
+"http:antigravity" = { version = "1.5.14", bin = "antigravity", platforms = { linux-x64 = { url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.14-5302690847260672/linux-x64/cli_linux_x64.tar.gz" }, linux-arm64 = { url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.14-5302690847260672/linux-arm/cli_linux_arm64.tar.gz" }, macos-x64 = { url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.14-5302690847260672/darwin-x64/cli_mac_x64.tar.gz" }, macos-arm64 = { url = "https://storage.googleapis.com/antigravity-public/antigravity-cli/1.5.14-5302690847260672/darwin-arm/cli_mac_arm64.tar.gz" } }, os = ["linux", "macos"] }
 
 "aws" = { version = "2.39.2", os = ["linux", "macos"] }
 "rust" = "1.99.1"
