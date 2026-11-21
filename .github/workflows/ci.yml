@@ -426,6 +426,8 @@ jobs:
       - name: Install dependencies
         uses: ./.github/actions/setup
       - name: Health-check portfolio public URLs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           bun run packages/portfolio/scripts/health-check-urls.ts \
             --timeout-ms 30000 --retries 4 --retry-delay-ms 5000

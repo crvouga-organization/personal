@@ -230,6 +230,8 @@ jobs:
         uses: ./.github/actions/setup
       # A failure opens a `ci-failed` issue through failure-issues.yml.
       - name: Check every public link the portfolio shows
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: >
           bun run packages/portfolio/scripts/health-check-urls.ts
           --timeout-ms 30000 --retries 4 --retry-delay-ms 5000
