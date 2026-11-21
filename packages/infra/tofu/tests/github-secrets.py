@@ -36,11 +36,11 @@ class Handler(BaseHTTPRequestHandler):
         if parts[0] == "orgs":
             status, body = 404, {"message": "Not Found"}
         elif parts[0] == "users":
-            body = {"login": "crvouga", "id": 1, "type": "User"}
+            body = {"login": "crvouga-organization", "id": 1, "type": "User"}
         elif len(parts) == 3 and parts[0] == "repos":
             name = parts[2]
-            body = {"id": 123, "name": name, "full_name": "crvouga/" + name,
-                    "owner": {"login": "crvouga", "id": 1}}
+            body = {"id": 123, "name": name, "full_name": "crvouga-organization/" + name,
+                    "owner": {"login": "crvouga-organization", "id": 1}}
         elif len(parts) == 5 and parts[3:] == ["actions", "secrets"]:
             names = secret_names - {name for repo, name in missing if repo == parts[2]}
             body = {"total_count": len(names), "secrets": [
@@ -88,7 +88,7 @@ terraform {{
   required_providers {{ github = {{ source = "integrations/github", version = "= 6.13.0" }} }}
 }}
 provider "github" {{
-  owner = "crvouga"
+  owner = "crvouga-organization"
   token = "test-github-token"
   base_url = "http://127.0.0.1:{server.server_port}/"
 }}

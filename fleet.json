@@ -1,8 +1,8 @@
 {
-  "$schema": "https://raw.githubusercontent.com/crvouga/dev-fleet/main/schema/fleet.schema.json",
+  "$schema": "https://raw.githubusercontent.com/crvouga-organization/dev-fleet/main/schema/fleet.schema.json",
   "version": 3,
   "source": {
-    "repository": "https://github.com/crvouga/dev-fleet.git"
+    "repository": "https://github.com/crvouga-organization/dev-fleet.git"
   },
   "secrets": {
     "provider": "vault",

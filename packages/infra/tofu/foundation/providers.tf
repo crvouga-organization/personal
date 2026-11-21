@@ -5,7 +5,7 @@ provider "graphql" {
 }
 provider "cloudflare" { api_token = var.cloudflare_api_token }
 provider "github" {
-  owner = "crvouga"
+  owner = "crvouga-organization"
   token = var.github_token
 }
 provider "planetscale" {

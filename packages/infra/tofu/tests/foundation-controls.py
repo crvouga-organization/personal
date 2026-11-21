@@ -38,7 +38,7 @@ class Handler(BaseHTTPRequestHandler):
         if "/orgs/" in path:
             return self.reply({"message": "Not Found"}, 404)
         if "/users/" in path:
-            return self.reply({"login": "crvouga", "id": 1, "type": "User"})
+            return self.reply({"login": "crvouga-organization", "id": 1, "type": "User"})
         if path.endswith("/vulnerability-alerts"):
             self.send_response(204)
             self.end_headers()
@@ -46,7 +46,7 @@ class Handler(BaseHTTPRequestHandler):
         if path.endswith("/repos/" + repository):
             settings = inventory["github"]["pr_ready"]["repo_settings"]
             return self.reply({**settings, "id": 123, "name": repository_name, "full_name": repository,
-                               "owner": {"login": "crvouga", "id": 1, "type": "User"},
+                               "owner": {"login": "crvouga-organization", "id": 1, "type": "User"},
                                "private": False, "permissions": {"admin": True}, "has_pages": False})
         raise AssertionError("Unexpected GitHub read: " + path)
 
@@ -145,7 +145,7 @@ terraform {{
   required_providers {{ github = {{ source = "integrations/github", version = "= 6.13.0" }} }}
 }}
 provider "github" {{
-  owner = "crvouga"
+  owner = "crvouga-organization"
   token = "test-github-token"
   base_url = "http://127.0.0.1:{server.server_port}/"
 }}

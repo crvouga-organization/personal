@@ -1,9 +1,14 @@
 module "inventory" { source = "../modules/inventory" }
 locals {
-  config        = module.inventory.config
-  vault         = local.config.vault
-  vault_addr    = "https://${local.vault.hostname}"
-  router_values = { for key, password in random_password.router : key => lookup(var.secrets["prd"], key, password.result) }
+  config     = module.inventory.config
+  vault      = local.config.vault
+  vault_addr = "https://${local.vault.hostname}"
+  # Repos moved from the crvouga user account into crvouga-organization. OIDC
+  # tokens now carry the org as owner; the old owner stays accepted (comma =
+  # any of, per the Vault provider) so nothing breaks mid-transition.
+  github_owner_aliases = { "crvouga-organization" = "crvouga" }
+  github_owners        = distinct(compact([local.config.github.org, lookup(local.github_owner_aliases, local.config.github.org, "")]))
+  router_values        = { for key, password in random_password.router : key => lookup(var.secrets["prd"], key, password.result) }
   # Shared OTLP ingest and agent read credentials. Foundation creates them in
   # the same deployment, before this root, once inventory marks them live.
   observability_live = local.config.observability.enabled && local.config.observability.live
@@ -71,7 +76,7 @@ resource "vault_jwt_auth_backend_role" "github" {
   user_claim        = each.value.user_claim
   bound_audiences   = [local.vault_addr]
   bound_claims_type = "glob"
-  bound_claims = merge({ repository = "${local.config.github.org}/*" },
+  bound_claims = merge({ repository = join(",", [for owner in local.github_owners : "${owner}/*"]) },
     try(each.value.bound_ref, null) == null ? {} : { ref = each.value.bound_ref },
   try(each.value.bound_claims, {}))
   token_policies          = [each.value.policy]

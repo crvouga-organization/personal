@@ -34,7 +34,7 @@ Local setup: follow [the shared machine bootstrap](scripts/dev/README.md) for ma
 
 After pushing, watch the complete CI run with `bun run gh:ci:watch`; local checks do not validate production deployment.
 
-Development computers are managed by [dev-fleet](https://github.com/crvouga/dev-fleet).
+Development computers are managed by [dev-fleet](https://github.com/crvouga-organization/dev-fleet).
 This repository holds only this fleet's `fleet.json` and the pinned `fleet.revision`.
 `bun run fleet:preview` previews a sync, `bun run fleet:sync` applies it and
 `bun run fleet:health` is the read-only report; each runs dev-fleet at that pin

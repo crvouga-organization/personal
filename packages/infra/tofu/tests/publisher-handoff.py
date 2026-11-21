@@ -40,22 +40,22 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split("?", 1)[0].removeprefix("/api/v3")
-        if path == "/orgs/crvouga":
+        if path == "/orgs/crvouga-organization":
             body, status = {"message": "Not Found"}, 404
-        elif path == "/users/crvouga":
-            body, status = {"login": "crvouga", "id": 1, "type": "User"}, 200
-        elif path == "/repos/crvouga/mockingbird":
+        elif path == "/users/crvouga-organization":
+            body, status = {"login": "crvouga-organization", "id": 1, "type": "User"}, 200
+        elif path == "/repos/crvouga-organization/mockingbird":
             body, status = {"id": 123, "name": "mockingbird", "default_branch": "main"}, 200
-        elif path == "/repos/crvouga/mockingbird/rulesets/23647164":
+        elif path == "/repos/crvouga-organization/mockingbird/rulesets/23647164":
             body, status = ruleset, 200
-        elif path == "/repos/crvouga/mockingbird/contents/.github/workflows/publish.yml":
+        elif path == "/repos/crvouga-organization/mockingbird/contents/.github/workflows/publish.yml":
             body, status = {"type": "file", "name": "publish.yml", "path": ".github/workflows/publish.yml",
                             "sha": "a" * 40, "encoding": "base64",
                             "url": f"http://127.0.0.1:{self.server.server_port}{path}?ref=main",
                             "content": base64.b64encode(b"original publisher\n").decode()}, 200
-        elif path == "/repos/crvouga/mockingbird/commits":
+        elif path == "/repos/crvouga-organization/mockingbird/commits":
             body, status = [commit], 200
-        elif path == "/repos/crvouga/mockingbird/commits/" + commit["sha"]:
+        elif path == "/repos/crvouga-organization/mockingbird/commits/" + commit["sha"]:
             body, status = commit, 200
         else:
             raise AssertionError("Unexpected read: " + path)
@@ -93,7 +93,7 @@ try:
   required_providers {{ github = {{ source = "integrations/github", version = "= 6.13.0" }} }}
 }}
 provider "github" {{
-  owner = "crvouga"
+  owner = "crvouga-organization"
   token = "test-token"
   base_url = "http://127.0.0.1:{server.server_port}/"
 }}

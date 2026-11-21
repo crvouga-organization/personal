@@ -17,7 +17,9 @@ import { VARIANT_PRESENTATIONS } from '../src/roles/presentation';
 
 const DIST = join(import.meta.dir, '..', 'dist');
 const TIMEOUT_MS = 120_000;
-const HTML_BUDGET_BYTES = 100_000;
+// 101 KB since the move to crvouga-organization: each of the ~24 evidence links
+// to github.com/crvouga-organization/... is 13 bytes longer than before.
+const HTML_BUDGET_BYTES = 101_000;
 const TRANSFER_BUDGET_BYTES = 400_000;
 const TAP_MIN_HEIGHT = 44;
 const TAP_MIN_WIDTH = 44;

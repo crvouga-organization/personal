@@ -7,7 +7,7 @@ description: Run, read and fix the CLIProxyAPI model health report (live, nightl
 
 # Model health
 
-The proxy and its checks live in [dev-fleet](https://github.com/crvouga/dev-fleet): models are declared
+The proxy and its checks live in [dev-fleet](https://github.com/crvouga-organization/dev-fleet): models are declared
 in `cliproxy/models.json` and checked by `cliproxy/scripts/modelhealth/`; read `cliproxy/docs/model-health.md`
 there. This repository runs them at the revision pinned in `fleet.revision` (`bun run cliproxy` goes
 through `scripts/dev/fleet.sh`).
