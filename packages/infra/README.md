@@ -5,7 +5,7 @@ Merging to `main` applies it through **Deploy**. Agent rules: [`AGENTS.md`](AGEN
 root [`AGENTS.md`](../../AGENTS.md). Audit of the agent-first workflow: [`AUDIT.md`](AUDIT.md).
 Settings the provider cannot express: [`GAPS.md`](GAPS.md).
 
-## GitHub merge gate (`crvouga/personal`)
+## GitHub merge gate (`crvouga-organization/personal`)
 
 Defined in `tofu/modules/inventory/inventory.tf.json` (`github.pr_ready`) and
 `tofu/foundation/repository.tf`:

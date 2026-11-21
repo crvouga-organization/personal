@@ -17,7 +17,7 @@ const OUTCOMES: Readonly<Record<string, () => string>> = {
   gamezilla: () =>
     `Local-first multiplayer game app defined by ${count(GAMEZILLA_FACTS.scenarios)} executable spec scenarios and ${count(GAMEZILLA_FACTS.stateModels)} formal state models that every pull request must pass.`,
   'headless-combobox': () =>
-    `Accessible, framework-agnostic combobox published on npm as an open-source library; ${count(stars('crvouga/headless-combobox'))} GitHub stars.`,
+    `Accessible, framework-agnostic combobox published on npm as an open-source library; ${count(stars('crvouga-organization/headless-combobox'))} GitHub stars.`,
 };
 
 const stars = (repo: string): number =>

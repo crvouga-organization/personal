@@ -15,7 +15,7 @@ import { join, resolve } from 'node:path';
 import type { GamezillaFacts } from '../src/lib/gamezilla-facts';
 import { writeLine } from '../src/library/cli-output';
 
-const REPO = 'crvouga/gamezilla';
+const REPO = 'crvouga-organization/gamezilla';
 const OUT = resolve(import.meta.dir, '../src/data/gamezilla-facts.json');
 
 const git = (cwd: string, args: readonly string[]): string => {
