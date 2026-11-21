@@ -69,6 +69,7 @@ function sleep(ms: number): Promise<void> {
 
 /** Hosts that answer GitHub-hosted runners with a bot-protection status. */
 const BOT_PROTECTED_STATUSES: Record<string, readonly number[]> = {
+  'linkedin.com': [429],
   'oneorigin.us': [403],
 };
 
