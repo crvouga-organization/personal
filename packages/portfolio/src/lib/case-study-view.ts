@@ -62,7 +62,7 @@ const mockingbird = (): OutcomeFact[] => {
       label: 'property-based test suites',
     },
     { value: count(repo.testCallSites), label: 'tests' },
-    ...repoLines('crvouga/mockingbird'),
+    ...repoLines('crvouga-organization/mockingbird'),
   ];
 };
 
@@ -94,7 +94,7 @@ const workspace = (): OutcomeFact[] => {
       value: `${count(ws.prsFailedCiBeforeMerge)} of ${count(ws.mergedPrs)}`,
       label: `pull requests stopped by CI before merge, since ${SNAPSHOT.window.from}`,
     },
-    ...repoLines('crvouga/personal'),
+    ...repoLines('crvouga-organization/personal'),
   ];
 };
 

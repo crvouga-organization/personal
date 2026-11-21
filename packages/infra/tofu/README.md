@@ -141,7 +141,7 @@ when another GitHub App supplies a status.
 Vault registry entries with `generated = true` receive independent generated
 secrets in their declared `configs`; their values survive resource renames.
 
-Pickflix's schema and publisher ownership transfers to `crvouga/pickflix-v1`.
+Pickflix's schema and publisher ownership transfers to `crvouga-organization/pickflix-v1`.
 The foundation `removed` blocks use `destroy = false`: applying them only forgets
 ownership, preserving the live `pickflix` schema, tables, data and publisher file.
 The app adopts existing tables in place and supplies its missing primary keys.
@@ -229,7 +229,7 @@ its destruction. Application repositories retain exclusive ownership of their
 Atlas migrations, tables and migration history. Existing schemas without this
 opt-in remain externally owned; no legacy schema is adopted implicitly.
 
-The `moviefinder` entry allocates the new namespace for `crvouga/moviefinder` and
+The `moviefinder` entry allocates the new namespace for `crvouga-organization/moviefinder` and
 hosts its image in the existing Workspace Railway project. It preserves all
 three legacy MovieFinder deployments. The foundation already feeds the same
 opaque DATABASE_URL into dev and prd; this change does not alter that platform
@@ -312,7 +312,7 @@ See [application decommissioning](../docs/application-decommission.md) before ap
 
 ## Repository rename: workspace → personal
 
-`crvouga/personal` is the canonical GitHub repository. The inventory's
+`crvouga-organization/personal` is the canonical GitHub repository. The inventory's
 `github.infra_repo`, locally built service source repositories, reusable workflow
 defaults, deployment guard, OCI source labels and machine bootstrap URLs use it.
 The R2 state keys, Railway service IDs, image prefix, resource addresses named

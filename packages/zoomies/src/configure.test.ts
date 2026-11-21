@@ -88,7 +88,11 @@ test('connects the installation and creates declared pools once', async () => {
 test('never recreates or modifies a pool tuned in the UI', async () => {
   const { api, calls } = fakeController({
     installations: [
-      { id: 'ins_9', installation_id: 456, target: 'crvouga/personal' },
+      {
+        id: 'ins_9',
+        installation_id: 456,
+        target: 'crvouga-organization/personal',
+      },
     ],
     pools: POOLS.map((pool) => ({
       id: 'p',
