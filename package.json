@@ -100,7 +100,7 @@
     "eslint-plugin-react-hooks": "catalog:",
     "ora": "catalog:",
     "prettier": "catalog:",
-    "turbo": "^2.11.12",
+    "turbo": "^2.11.13",
     "typescript": "catalog:",
     "typescript-eslint": "catalog:",
     "yaml": "catalog:"
@@ -129,7 +129,7 @@
     "hono": "^4.13.19",
     "prettier": "^3.10.1",
     "tsx": "^4.19.4",
-    "turbo": "^2.11.12",
+    "turbo": "^2.11.13",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.73.0",
     "yaml": "^2.9.0",
