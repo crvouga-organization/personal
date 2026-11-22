@@ -18,6 +18,7 @@ import type { Project as PortfolioProject } from '../content/project';
 import { buildSkillRows, type SkillRow } from '../content/skills';
 import { TOPIC_TO_NAME } from '../content/topic';
 import { formatPhoneNumber } from '../library/phone-number';
+import { stripTags } from '../library/strip-tags';
 import { projectHref } from '../lib/projects-view';
 import { AI_ASSISTED_ROW } from '../content/skills';
 import { resumeOutcomeFor } from './outcomes';
@@ -83,15 +84,11 @@ const squash = (s: string): string => s.replace(/\s+/g, ' ').trim();
  * page; in a PDF it reads as a stray glyph glued to a word.
  */
 export const toPlainText = (html: string): string =>
-  squash(decodeEntities(html.replace(/<[^>]*>/g, '')).replace(/↗/g, ''));
+  squash(decodeEntities(stripTags(html)).replace(/↗/g, ''));
 
 /** Keeps `<strong>`/`<em>`/`<code>` so the scan-anchors survive into print. */
 export const toInlineHtml = (html: string): string =>
-  squash(
-    html
-      .replace(/<[^>]*>/g, (tag) => (KEPT_TAG.test(tag) ? tag : ''))
-      .replace(/↗/g, '')
-  );
+  squash(stripTags(html, (tag) => KEPT_TAG.test(tag)).replace(/↗/g, ''));
 
 /** A sentence this short is a leftover link label ("Documentation site."). */
 const MIN_SENTENCE_WORDS = 4;

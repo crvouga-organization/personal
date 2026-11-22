@@ -46,7 +46,7 @@ Commands are namespaced by **domain** — every leaf states its domain in `--hel
 | `personal workstation status`                                                                  | personal workstation version, launcher, links, notifier, providers, model, Vault |
 | `personal workstation sync`                                                                    | links + sounds + notifier build + providers (best-effort Vault)                  |
 | `personal workstation doctor [--fix]`                                                          | pass/warn/fail checks with fixes                                                 |
-| `personal workstation cleanup [--dry-run] [--include-tools] [--protect <re…>]`                 | kill leaked dev process trees (see **Process cleanup**)                          |
+| `personal workstation cleanup [--dry-run] [--include-tools] [--protect <txt…>]`                | kill leaked dev process trees (see **Process cleanup**)                          |
 | `personal workstation opencode status\|sync\|set-model\|reset-model\|disable\|list`            | OpenCode config management (set-model picks build + plan models)                 |
 | `personal workstation opencode providers list\|sync`                                           | Vault-backed provider status + sync                                              |
 | `personal workstation opencode backup\|backups\|reset`                                         | timestamped backup, list, reset config                                           |
@@ -98,7 +98,7 @@ by owner:
 Never killed: `personal` itself, its ancestors and its own pipeline, agent CLIs
 (`claude`, `opencode`, `codex`, …), GUI app bundles, other users' processes,
 local infra (`9router`, `cloudflared`, colima/docker, the notifier) and
-anything matching `--protect <regex>`. A tree containing any of those is
+anything whose command contains a `--protect <text>` (case-insensitive). A tree containing any of those is
 skipped whole.
 
 Kill sequence: SIGSTOP the whole set (so watchers and test runners cannot

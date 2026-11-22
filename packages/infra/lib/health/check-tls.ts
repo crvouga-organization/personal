@@ -1,4 +1,7 @@
-/** Every public hostname presents a trusted certificate that is not about to expire. */
+/**
+ * Every public hostname presents a trusted certificate that is not about to
+ * expire. An expired or untrusted certificate fails the verified handshake.
+ */
 import { errorMessage, mapLimit, type HealthContext } from "./context.js";
 import { fail, pass, warn, type CheckResult } from "./report.js";
 import { httpsHostnames } from "./targets.js";
@@ -12,7 +15,6 @@ async function checkCertificate(ctx: HealthContext, hostname: string): Promise<C
     const daysLeft = Math.floor((cert.validTo.getTime() - ctx.now().getTime()) / DAY_MS);
     const expiry = cert.validTo.toISOString().slice(0, 10);
     if (daysLeft < 0) return fail(hostname, `certificate expired ${expiry}`);
-    if (!cert.authorized) return fail(hostname, `certificate not trusted: ${cert.error ?? "unknown reason"}`);
     if (daysLeft < ctx.options.certificateWarnDays) {
       return warn(hostname, `certificate expires in ${daysLeft} day(s) (${expiry}); renewal has not happened`);
     }

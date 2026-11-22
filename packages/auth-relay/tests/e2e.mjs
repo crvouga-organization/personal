@@ -267,9 +267,18 @@ try {
   apply();
   for (const [id, c] of Object.entries(clients)) await application(id, c);
   const proxy = createServer((req, res) => {
+    // The backend origin is fixed; the client only chooses the path, so a
+    // request target like `@other.host` can never redirect the proxy.
+    const backend = new URL(activeBackend);
     const upstream = httpRequest(
-      activeBackend + req.url,
-      { method: req.method, headers: req.headers },
+      {
+        protocol: backend.protocol,
+        hostname: backend.hostname,
+        port: backend.port,
+        path: req.url,
+        method: req.method,
+        headers: req.headers,
+      },
       (response) => {
         res.writeHead(response.statusCode, response.headers);
         response.pipe(res);

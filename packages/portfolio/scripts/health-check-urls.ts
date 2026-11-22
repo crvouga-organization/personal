@@ -73,6 +73,11 @@ const BOT_PROTECTED_STATUSES: Record<string, readonly number[]> = {
   'oneorigin.us': [403],
 };
 
+function isLinkedInUrl(url: string): boolean {
+  const host = new URL(url).hostname;
+  return host === 'linkedin.com' || host.endsWith('.linkedin.com');
+}
+
 function isBotProtected(url: string, status: number): boolean {
   const host = new URL(url).hostname.replace(/^www\./, '');
   return BOT_PROTECTED_STATUSES[host]?.includes(status) ?? false;
@@ -111,7 +116,7 @@ async function fetchOnce(
     redirect: 'follow',
     signal: AbortSignal.timeout(timeoutMs),
   });
-  const isLinkedIn = url.includes('linkedin.com');
+  const isLinkedIn = isLinkedInUrl(url);
   const ok =
     response.ok ||
     (isLinkedIn && (response.status === 999 || response.status === 405)) ||
@@ -124,7 +129,7 @@ async function checkUrlOnce(
   opts: CheckOptions
 ): Promise<UrlCheckResult> {
   const startTime = Date.now();
-  const isLinkedIn = url.includes('linkedin.com');
+  const isLinkedIn = isLinkedInUrl(url);
 
   try {
     try {

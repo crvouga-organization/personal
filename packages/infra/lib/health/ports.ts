@@ -46,21 +46,14 @@ const dns: DnsPort = {
 function certificate(hostname: string, timeoutMs: number): Promise<Certificate> {
   assert.nonEmptyString(hostname, "certificate hostname must be non-empty");
   return new Promise((resolve, reject) => {
-    // Inspect an untrusted chain too, so an expired certificate reports its date.
-    const socket = tls.connect(
-      { host: hostname, port: 443, servername: hostname, rejectUnauthorized: false, timeout: timeoutMs },
-      () => {
-        const peer = socket.getPeerCertificate();
-        const error = socket.authorizationError;
-        socket.end();
-        if (!peer?.valid_to) return reject(new Error("no peer certificate"));
-        resolve({
-          validTo: new Date(peer.valid_to),
-          authorized: socket.authorized,
-          ...(error ? { error: String(error) } : {}),
-        });
-      },
-    );
+    // Verification stays on: an expired or untrusted chain rejects the
+    // handshake with the reason (e.g. "certificate has expired").
+    const socket = tls.connect({ host: hostname, port: 443, servername: hostname, timeout: timeoutMs }, () => {
+      const peer = socket.getPeerCertificate();
+      socket.end();
+      if (!peer?.valid_to) return reject(new Error("no peer certificate"));
+      resolve({ validTo: new Date(peer.valid_to) });
+    });
     socket.on("timeout", () => socket.destroy(new Error(`TLS handshake timed out after ${timeoutMs}ms`)));
     socket.on("error", reject);
   });

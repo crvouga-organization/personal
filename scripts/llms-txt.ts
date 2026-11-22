@@ -148,7 +148,7 @@ function code(value: string): string {
 }
 
 function cell(value: string): string {
-  return value.replace(/\|/g, '\\|').replace(/\s+/g, ' ').trim();
+  return value.replace(/[\\|]/g, '\\$&').replace(/\s+/g, ' ').trim();
 }
 
 function table(

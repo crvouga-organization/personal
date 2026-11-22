@@ -150,7 +150,7 @@ export function fakeContext(overrides: Partial<HealthContext> = {}): HealthConte
       resolveTxt: async () => notFound(),
       resolveMx: async () => [{ exchange: "mx.example.net", priority: 10 }],
     },
-    certificate: async () => ({ validTo: new Date("2027-01-01T00:00:00Z"), authorized: true }),
+    certificate: async () => ({ validTo: new Date("2027-01-01T00:00:00Z") }),
     listBucket: async () => [],
     sqlPing: async () => undefined,
     run: async () => ({ code: 0, stdout: "", stderr: "" }),

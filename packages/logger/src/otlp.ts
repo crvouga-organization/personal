@@ -74,11 +74,17 @@ function attributes(fields: Record<string, unknown>): KeyValue[] {
     .map(([key, value]) => ({ key, value: anyValue(value) }));
 }
 
+function trimTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === '/') end -= 1;
+  return url.slice(0, end);
+}
+
 function logsUrl(env: Env): string | undefined {
   const specific = env['OTEL_EXPORTER_OTLP_LOGS_ENDPOINT']?.trim();
   if (specific) return specific;
   const base = env['OTEL_EXPORTER_OTLP_ENDPOINT']?.trim();
-  return base ? `${base.replace(/\/+$/, '')}/v1/logs` : undefined;
+  return base ? `${trimTrailingSlashes(base)}/v1/logs` : undefined;
 }
 
 function toRecord(level: Level, entry: Record<string, unknown>): LogRecord {

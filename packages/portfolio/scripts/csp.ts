@@ -27,8 +27,8 @@ export type InlineSources = {
   readonly styleAttributes: boolean;
 };
 
-const SCRIPT_RE = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
-const STYLE_RE = /<style\b[^>]*>([\s\S]*?)<\/style\s*>/gi;
+const SCRIPT_RE = /<script\b([^>]*)>([\s\S]*?)<\/script\b[^>]*>/gi;
+const STYLE_RE = /<style\b[^>]*>([\s\S]*?)<\/style\b[^>]*>/gi;
 const TYPE_ATTR_RE = /\stype\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
 const SRC_ATTR_RE = /\ssrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/i;
 const STYLE_ATTR_RE = /<[a-z][^>]*\sstyle\s*=/i;

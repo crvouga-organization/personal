@@ -83,7 +83,7 @@ export async function checkDomains(ctx: HealthContext): Promise<readonly CheckRe
         await response.body?.cancel();
         if (response.status !== endpoint.status || (endpoint.location && response.headers.get('location') !== endpoint.location)) throw new Error('HTTPS status or redirect differs from inventory');
         const cert = await ctx.certificate(new URL(endpoint.url).hostname);
-        if (!cert.authorized || cert.validTo.getTime() < ctx.now().getTime() + ctx.options.certificateWarnDays * 86400000) throw new Error('TLS is untrusted or near expiry');
+        if (cert.validTo.getTime() < ctx.now().getTime() + ctx.options.certificateWarnDays * 86400000) throw new Error('TLS certificate is near expiry');
         return 'expected HTTPS response and trusted certificate';
         });
         results.push(spec.availability === 'best-effort' && result.status === 'fail' ? { ...result, status: 'warn', detail: `${result.detail}; availability is advisory for this unused domain` } : result);

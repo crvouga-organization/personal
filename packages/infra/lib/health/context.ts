@@ -15,10 +15,9 @@ export type DnsPort = {
   readonly resolveMx: (name: string) => Promise<readonly { exchange: string; priority: number }[]>;
 };
 
+/** A certificate that passed chain and hostname verification. */
 export type Certificate = {
   readonly validTo: Date;
-  readonly authorized: boolean;
-  readonly error?: string;
 };
 
 export type BucketAccess = {
