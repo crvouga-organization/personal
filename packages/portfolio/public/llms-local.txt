@@ -401,14 +401,14 @@ remain per-machine prerequisites. Configuration actions affect the current machi
 | `npm:vercel` | 65.8.0 | Base toolchain |
 | `npm:wrangler` | 4.156.0 | Base toolchain |
 | `railway` | 5.71.0 | Base toolchain |
-| `aqua:anomalyco/opencode` | 1.19.5 | Base toolchain |
+| `aqua:anomalyco/opencode` | 1.19.6 | Base toolchain |
 | `vault` | 2.2.1 | Base toolchain |
-| `claude` | 2.1.314 | Base toolchain |
-| `codex` | 0.166.0 | Base toolchain |
-| `gemini` | 0.66.0 | Base toolchain |
-| `copilot` | 1.0.105 | Base toolchain |
-| `http:grok` | 1.0.77 | Base toolchain (linux, macos) |
-| `http:antigravity` | 1.5.3 | Base toolchain (linux, macos) |
+| `claude` | 2.1.330 | Base toolchain |
+| `codex` | 0.171.0 | Base toolchain |
+| `gemini` | 0.70.0 | Base toolchain |
+| `copilot` | 1.0.114 | Base toolchain |
+| `http:grok` | 1.0.92 | Base toolchain (linux, macos) |
+| `http:antigravity` | 1.5.14 | Base toolchain (linux, macos) |
 | `aws` | 2.39.2 | Base toolchain (linux, macos) |
 | `rust` | 1.99.1 | Base toolchain |
 | `cmake` | 4.4.5 | Base toolchain |
