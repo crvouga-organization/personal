@@ -54,7 +54,7 @@ env:
   PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || 'nightly' }}
 jobs:
   health:
-    if: github.repository == 'crvouga-organization/personal' && github.ref == 'refs/heads/main'
+    if: github.repository == 'crvouga/personal' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -69,7 +69,7 @@ jobs:
       - name: Check out dev-fleet at the pinned revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: crvouga-organization/dev-fleet
+          repository: crvouga/dev-fleet
           ref: ${{ steps.pin.outputs.revision }}
           path: dev-fleet
           persist-credentials: false

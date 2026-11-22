@@ -23,7 +23,7 @@ import { join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dir, '..');
 const SHOTS = join(ROOT, 'storybook-screenshots');
-const REPO = 'crvouga-organization/personal';
+const REPO = 'crvouga/personal';
 const LIMIT = 60_000;
 
 const argv = process.argv.slice(2);

@@ -4,7 +4,7 @@ The operator superseded issue #162's native-only restriction with the platform's
 standard Docker/GHCR publishing contract on 2026-10-27. The standalone application
 remains Bun + SQLite + Litestream; it has no PostgreSQL backend or application-side
 Vault dependency. Application code, migrations and publisher workflow belong to
-`crvouga-organization/fleet`.
+`crvouga/fleet`.
 
 ## Release evidence
 

@@ -141,7 +141,7 @@ when another GitHub App supplies a status.
 Vault registry entries with `generated = true` receive independent generated
 secrets in their declared `configs`; their values survive resource renames.
 
-Pickflix's schema and publisher ownership transfers to `crvouga-organization/pickflix-v1`.
+Pickflix's schema and publisher ownership transfers to `crvouga/pickflix-v1`.
 The foundation `removed` blocks use `destroy = false`: applying them only forgets
 ownership, preserving the live `pickflix` schema, tables, data and publisher file.
 The app adopts existing tables in place and supplies its missing primary keys.
@@ -229,7 +229,7 @@ its destruction. Application repositories retain exclusive ownership of their
 Atlas migrations, tables and migration history. Existing schemas without this
 opt-in remain externally owned; no legacy schema is adopted implicitly.
 
-The `moviefinder` entry allocates the new namespace for `crvouga-organization/moviefinder` and
+The `moviefinder` entry allocates the new namespace for `crvouga/moviefinder` and
 hosts its image in the existing personal Railway project. It preserves all
 three legacy MovieFinder deployments. The foundation already feeds the same
 opaque DATABASE_URL into dev and prd; this change does not alter that platform
@@ -312,7 +312,7 @@ See [application decommissioning](../docs/application-decommission.md) before ap
 
 ## Repository rename: workspace → personal
 
-`crvouga-organization/personal` is the canonical GitHub repository. The inventory's
+`crvouga/personal` is the canonical GitHub repository. The inventory's
 `github.infra_repo`, locally built service source repositories, reusable workflow
 defaults, deployment guard, OCI source labels and machine bootstrap URLs use it.
 The R2 state keys, Railway service IDs, image prefix, resource addresses named
@@ -351,13 +351,13 @@ remain authoritative. Remove this compatibility step only after a provider
 upgrade proves volume creation/read-back and subsequent plans are stable.
 A successful untaint does not establish application readiness.
 
-For [issue #172](https://github.com/crvouga-organization/personal/issues/172), the services
+For [issue #172](https://github.com/crvouga/personal/issues/172), the services
 plans in runs `41172245925`, `41173195633` and `41173237414` completed without
 replacing Fleet. The Fleet diagnostic run still rejected deployment
 `9e1007de-1495-4f0f-86ed-c1cf67c140b2`: its runtime reported a missing Litestream
 `.ltx` file under `/var/lib/fleet/.fleet.db-litestream`, self-fenced, and failed
 startup. This is evidence for the owning application's
-[issue #9](https://github.com/crvouga-organization/fleet/issues/9), not evidence that a larger
+[issue #9](https://github.com/crvouga/fleet/issues/9), not evidence that a larger
 platform readiness timeout will repair its replication state.
 
 The Maintenance workflow's `deployment-logs` task reads build and runtime
@@ -365,7 +365,7 @@ logs for explicit deployment UUIDs without planning, applying, restarting or
 changing any service:
 
 ```sh
-gh workflow run maintenance.yml --repo crvouga-organization/personal --ref main \
+gh workflow run maintenance.yml --repo crvouga/personal --ref main \
   -f task=deployment-logs \
   -f deployment_ids=9e1007de-1495-4f0f-86ed-c1cf67c140b2
 ```
@@ -389,6 +389,6 @@ record, retention rules or stored data.
 
 ## Local proxy public hostname
 
-Inventory `cloudflare.additional_tunnels.cli-proxy` declares the remotely configured tunnel for `cli-proxy.chrisvouga.dev`. Entries with `credential_path` opt into foundation-owned DNS/token outputs and an isolated vault-root document containing `TUNNEL_TOKEN`. This does not rewrite shared personal secrets. The connector is a pinned local runtime run by [dev-fleet](https://github.com/crvouga-organization/dev-fleet) (`cliproxy/`), with API-key authentication enforced by the proxy. Cloud provisioning remains OpenTofu-only; see dev-fleet's stable HTTPS and recovery runbooks. The existing Tailscale Service remains available.
+Inventory `cloudflare.additional_tunnels.cli-proxy` declares the remotely configured tunnel for `cli-proxy.chrisvouga.dev`. Entries with `credential_path` opt into foundation-owned DNS/token outputs and an isolated vault-root document containing `TUNNEL_TOKEN`. This does not rewrite shared personal secrets. The connector is a pinned local runtime run by [dev-fleet](https://github.com/crvouga/dev-fleet) (`cliproxy/`), with API-key authentication enforced by the proxy. Cloud provisioning remains OpenTofu-only; see dev-fleet's stable HTTPS and recovery runbooks. The existing Tailscale Service remains available.
 
 Inventory `cloudflare.additional_tunnels.beszel` does the same for the fleet dashboard at `beszel.chrisvouga.dev`: tunnel, proxied DNS and the isolated `secret/beszel/tunnel` document. The hub runs on the fleet manager, which reads it with the operator's own Vault session; dev-fleet's monitoring policy starts the pinned connector next to the hub. The `beszel-hub-read` grant on the `fleet-worker-chris-vouga-ms-a2` token predates that move and is removed by a reviewed token rotation (the managed token is protected from replacement).

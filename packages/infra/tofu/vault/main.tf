@@ -3,10 +3,12 @@ locals {
   config     = module.inventory.config
   vault      = local.config.vault
   vault_addr = "https://${local.vault.hostname}"
-  # Repos moved from the crvouga user account into crvouga-organization. OIDC
-  # tokens now carry the org as owner; the old owner stays accepted (comma =
-  # any of, per the Vault provider) so nothing breaks mid-transition.
-  github_owner_aliases = { "crvouga-organization" = "crvouga" }
+  # The repos have moved between the crvouga user account and the
+  # crvouga-organization organization, in both directions. An OIDC token carries
+  # the owner a repo has at that moment, so both stay accepted whichever one the
+  # inventory names (comma = any of, per the Vault provider) and the next move
+  # needs no change here.
+  github_owner_aliases = { "crvouga" = "crvouga-organization", "crvouga-organization" = "crvouga" }
   github_owners        = distinct(compact([local.config.github.org, lookup(local.github_owner_aliases, local.config.github.org, "")]))
   router_values        = { for key, password in random_password.router : key => lookup(var.secrets["prd"], key, password.result) }
   # Shared OTLP ingest and agent read credentials. Foundation creates them in

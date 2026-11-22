@@ -49,6 +49,7 @@ locals {
     local.accessibility_label,
     { name = "agent-reported", color = "5319e7", description = "Filed through docs/REPORTING_ISSUES.md; the /resolve-issues queue" },
     { name = "bug", color = "d73a4a", description = "A mock crashes, leaks state, contradicts its README, or does not build" },
+    { name = "ci-failure", color = "b60205", description = "An important workflow is failing on main; opened and closed by ci-alerts.yml" },
     { name = "documentation", color = "0075ca", description = "Improvements or additions to documentation" },
     { name = "duplicate", color = "cfd3d7", description = "This issue or pull request already exists" },
     { name = "enhancement", color = "a2eeef", description = "New feature or request" },

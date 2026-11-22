@@ -137,7 +137,7 @@ run "moviefinder_ownership" {
     error_message = "MovieFinder must retain its registered production Google sign-in settings."
   }
   assert {
-    condition     = one([for service in output.config.services : service if service.id == "moviefinder"]).github_repo == "crvouga-organization/moviefinder" && one([for service in output.config.services : service if service.id == "moviefinder"]).database_schema == "moviefinder"
+    condition     = one([for service in output.config.services : service if service.id == "moviefinder"]).github_repo == "crvouga/moviefinder" && one([for service in output.config.services : service if service.id == "moviefinder"]).database_schema == "moviefinder"
     error_message = "The new MovieFinder service and schema must belong to its own application repository."
   }
   assert {
