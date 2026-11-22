@@ -1,4 +1,58 @@
+import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+
+import type { PlatformName } from '@crvouga/dev-fleet/src/platform/types';
 import { shortName, type NetHost } from './inventory';
+
+type Env = Readonly<Record<string, string | undefined>>;
+
+/**
+ * VS Code user `settings.json`, or `null` when unknown on this OS. Lives here
+ * because VS Code is workstation configuration: dev-fleet's `Platform` stopped
+ * describing it in 0.9.
+ */
+export function vscodeSettingsPath(
+  platform: PlatformName,
+  env: Env = process.env,
+  home: string = homedir()
+): string | null {
+  const dir = (name: string, fallback: string) =>
+    env[name]?.trim() || join(home, fallback);
+  switch (platform) {
+    case 'darwin':
+      return join(home, 'Library/Application Support/Code/User/settings.json');
+    case 'linux':
+      return join(dir('XDG_CONFIG_HOME', '.config'), 'Code/User/settings.json');
+    case 'windows':
+      return join(dir('APPDATA', 'AppData/Roaming'), 'Code/User/settings.json');
+    case 'unknown':
+      return null;
+  }
+}
+
+/** VS Code `code` CLI binaries shipped inside the installed app. */
+export function vscodeCliBinaries(
+  platform: PlatformName,
+  env: Env = process.env,
+  home: string = homedir(),
+  exists: (path: string) => boolean = existsSync
+): readonly string[] {
+  const candidates: Record<PlatformName, readonly string[]> = {
+    darwin: [
+      '/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code',
+    ],
+    linux: ['/usr/share/code/bin/code'],
+    windows: [
+      join(
+        env['LOCALAPPDATA']?.trim() || join(home, 'AppData/Local'),
+        'Programs/Microsoft VS Code/bin/code.cmd'
+      ),
+    ],
+    unknown: [],
+  };
+  return candidates[platform].filter(exists);
+}
 
 /** Minimum Remote-SSH connect timeout; busy machines need more than the 15s default. */
 export const VSCODE_CONNECT_TIMEOUT_S = 60;

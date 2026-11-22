@@ -21,7 +21,11 @@ import { findOnPath, lastLine } from './run';
 import { renderSshBlock, SSH_BLOCK_END, upsertSshBlock } from './ssh-config';
 import { parsePing, parseTailscaleStatus } from './tailscale';
 import { parseT3Environment } from './t3';
-import { mergeVscodeSettings } from './vscode';
+import {
+  mergeVscodeSettings,
+  vscodeCliBinaries,
+  vscodeSettingsPath,
+} from './vscode';
 
 const HOST: NetHost = {
   alias: 'box',
@@ -130,6 +134,30 @@ test('upsertSshBlock keeps user config, replaces managed + legacy blocks', () =>
   expect(migrated).not.toContain('devnet:begin');
   expect(migrated).not.toContain('Host z');
   expect(upsertSshBlock('', 'B')).toBe('B\n');
+});
+
+test('VS Code paths follow the platform and its environment', () => {
+  expect(vscodeSettingsPath('darwin', {}, '/h')).toBe(
+    '/h/Library/Application Support/Code/User/settings.json'
+  );
+  expect(vscodeSettingsPath('linux', {}, '/h')).toBe(
+    '/h/.config/Code/User/settings.json'
+  );
+  expect(vscodeSettingsPath('linux', { XDG_CONFIG_HOME: '/x' }, '/h')).toBe(
+    '/x/Code/User/settings.json'
+  );
+  expect(vscodeSettingsPath('windows', { APPDATA: '/a' }, '/h')).toBe(
+    '/a/Code/User/settings.json'
+  );
+  expect(vscodeSettingsPath('unknown', {}, '/h')).toBeNull();
+
+  const linuxCli = '/usr/share/code/bin/code';
+  expect(vscodeCliBinaries('linux', {}, '/h', () => true)).toEqual([linuxCli]);
+  expect(vscodeCliBinaries('linux', {}, '/h', () => false)).toEqual([]);
+  expect(
+    vscodeCliBinaries('windows', { LOCALAPPDATA: '/l' }, '/h', () => true)
+  ).toEqual(['/l/Programs/Microsoft VS Code/bin/code.cmd']);
+  expect(vscodeCliBinaries('unknown', {}, '/h', () => true)).toEqual([]);
 });
 
 test('mergeVscodeSettings adds platforms + timeout, keeps other keys, refuses JSONC', () => {

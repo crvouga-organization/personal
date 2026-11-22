@@ -19,7 +19,11 @@ import { netStateDir } from './history';
 import type { NetHost } from './inventory';
 import { findOnPath } from './run';
 import { renderSshBlock, upsertSshBlock } from './ssh-config';
-import { mergeVscodeSettings } from './vscode';
+import {
+  mergeVscodeSettings,
+  vscodeCliBinaries,
+  vscodeSettingsPath,
+} from './vscode';
 
 export const NET_JOB_LABEL = 'dev.chrisvouga.ws-net-check';
 export const NET_JOB_INTERVAL_S = 300;
@@ -88,7 +92,7 @@ export function fixCodeCli(platform: Platform): FixStep {
       changed: false,
       detail: 'already on PATH',
     });
-  const app = platform.vscodeCliBinaries()[0];
+  const app = vscodeCliBinaries(platform.name)[0];
   if (app === undefined)
     return step('code-cli', label, {
       changed: false,
@@ -131,7 +135,7 @@ export function fixVscodeSettings(
   backupDir: string
 ): FixStep {
   const label = 'VS Code Remote-SSH settings';
-  const path = platform.vscodeSettingsPath();
+  const path = vscodeSettingsPath(platform.name);
   if (path === null)
     return step('vscode-settings', label, {
       changed: false,
