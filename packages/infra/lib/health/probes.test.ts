@@ -109,16 +109,17 @@ describe("tls", () => {
 
   test("expired fails, untrusted fails, near expiry warns", async () => {
     const day = 24 * 60 * 60 * 1000;
-    const certificates: Record<string, { validTo: Date; authorized: boolean; error?: string }> = {
-      "www.example.dev": { validTo: new Date(NOW.getTime() - day), authorized: false, error: "CERT_HAS_EXPIRED" },
-      "turborepo.example.dev": { validTo: new Date(NOW.getTime() + 90 * day), authorized: false, error: "SELF_SIGNED" },
-      "example.dev": { validTo: new Date(NOW.getTime() + 3 * day), authorized: true },
+    const rejected: Record<string, string> = {
+      "www.example.dev": "certificate has expired",
+      "turborepo.example.dev": "self-signed certificate",
+      "llm.example.dev": "ECONNREFUSED",
     };
     const results = await checkTls(
       fakeContext({
         certificate: async (hostname) => {
-          if (hostname === "llm.example.dev") throw new Error("ECONNREFUSED");
-          return certificates[hostname] ?? { validTo: new Date(NOW.getTime() + 90 * day), authorized: true };
+          const reason = rejected[hostname];
+          if (reason) throw new Error(reason);
+          return { validTo: new Date(NOW.getTime() + (hostname === "example.dev" ? 3 : 90) * day) };
         },
       }),
     );

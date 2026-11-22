@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 
 import { SITE_DESCRIPTION } from '../lib/seo';
+import { stripTags } from '../library/strip-tags';
 import { CONTENT } from './content';
 import { logisticsLines } from './hero';
 import { TOPIC_TO_NAME } from './topic';
@@ -23,7 +24,6 @@ const MAX_META_DESCRIPTION_CHARS = 160;
 /** A bullet longer than this is two ideas, or padding. */
 const MAX_BULLET_WORDS = 28;
 
-const stripTags = (html: string): string => html.replace(/<[^>]*>/g, '');
 const words = (html: string): number =>
   stripTags(html).split(/\s+/).filter(Boolean).length;
 

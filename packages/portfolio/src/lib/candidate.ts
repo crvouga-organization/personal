@@ -15,6 +15,7 @@ import { resumeOutcomeFor } from '../resume/outcomes';
 import { buildSkills } from '../resume/content';
 import { PROOF_TILES } from './proof-view';
 import { projectHref, VISIBLE_PROJECTS } from './projects-view';
+import { stripTags } from '../library/strip-tags';
 import { isoYearMonth, workDateRange } from './work-view';
 
 const SITE = CONTENT.SITE_URL;
@@ -22,11 +23,7 @@ const abs = (path: string): string =>
   path.startsWith('http') ? path : `${SITE}${path}`;
 
 export const plain = (html: string): string =>
-  html
-    .replace(/<[^>]*>/g, '')
-    .replace(/&amp;/g, '&')
-    .replace(/\s+/g, ' ')
-    .trim();
+  stripTags(html).replace(/&amp;/g, '&').replace(/\s+/g, ' ').trim();
 
 /** One line per flagship: title, where to read about it, its outcome. */
 export type Flagship = {

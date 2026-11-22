@@ -1,4 +1,4 @@
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 
 import { assert } from '@pkgs/assert';
 
@@ -15,7 +15,7 @@ export type VaultTokenResult = {
 export type VaultCliOptions = {
   tokenEnvName?: string;
   processEnv?: NodeJS.ProcessEnv;
-  execSyncFn?: typeof execSync;
+  execFileSyncFn?: typeof execFileSync;
   /** Vault API address (e.g. from `.vault.yaml`). */
   addr?: string;
   /** KV v2 mount path (e.g. `secret`). */
@@ -26,23 +26,6 @@ function createVaultCliError(message: string, options?: ErrorOptions): Error {
   const error = new Error(message, options);
   error.name = 'VaultCliError';
   return error;
-}
-
-function shellEscape(value: string): string {
-  assert.string(value, 'VaultCli.shellEscape: value must be a string');
-  if (/^[A-Za-z0-9_./:-]+$/.test(value)) {
-    return value;
-  }
-  const escaped = `'${value.replace(/'/g, `'\\''`)}'`;
-  assert.nonEmptyString(
-    escaped,
-    'VaultCli.shellEscape: escaped must be non-empty'
-  );
-  assert.ok(
-    escaped.startsWith(`'`),
-    'VaultCli.shellEscape: escaped must be quoted'
-  );
-  return escaped;
 }
 
 function normalizeTokenEnvName(rawName: string | undefined): string {
@@ -95,7 +78,7 @@ function normalizeMount(mount: string | undefined): string {
 export class VaultCli {
   private readonly tokenEnvName: string;
   private readonly processEnv: NodeJS.ProcessEnv;
-  private readonly execSyncFn: typeof execSync;
+  private readonly execFileSyncFn: typeof execFileSync;
   private readonly addr: string | null;
   private readonly mount: string;
 
@@ -108,8 +91,8 @@ export class VaultCli {
     this.tokenEnvName = normalizeTokenEnvName(options?.tokenEnvName);
     assert.defined(process.env, 'VaultCli: process.env fallback valid');
     this.processEnv = options?.processEnv ?? process.env;
-    assert.defined(execSync, 'VaultCli: execSync fallback valid');
-    this.execSyncFn = options?.execSyncFn ?? execSync;
+    assert.defined(execFileSync, 'VaultCli: execFileSync fallback valid');
+    this.execFileSyncFn = options?.execFileSyncFn ?? execFileSync;
     this.addr = normalizeAddr(options?.addr);
     this.mount = normalizeMount(options?.mount);
     assert.nonEmptyString(
@@ -118,7 +101,7 @@ export class VaultCli {
     );
     assert.nonEmptyString(this.mount, 'VaultCli: mount invariant');
     assert.defined(this.processEnv, 'VaultCli: processEnv must be set');
-    assert.defined(this.execSyncFn, 'VaultCli: execSyncFn must be set');
+    assert.defined(this.execFileSyncFn, 'VaultCli: execFileSyncFn must be set');
   }
 
   private runVaultRaw(subcommand: string, args: readonly string[]): string {
@@ -130,27 +113,24 @@ export class VaultCli {
     // The `vault` binary is a wrapper (secret-store) that only special-cases
     // `run`/`setup` and passes everything else through to the underlying Vault
     // CLI. A leading `-address` flag is NOT accepted by the wrapper, so the
-    // address must be supplied via the VAULT_ADDR env var instead.
-    const cmd = ['vault', subcommand, ...args].join(' ');
-    assert.nonEmptyString(cmd, 'VaultCli.runVaultRaw: cmd must be non-empty');
-    assert.ok(
-      cmd.startsWith('vault '),
-      'VaultCli.runVaultRaw: cmd must target vault'
-    );
+    // address must be supplied via the VAULT_ADDR env var instead. Arguments
+    // go to the binary as argv (no shell), so values are never interpreted.
     const env =
       this.addr !== null
         ? { ...this.processEnv, VAULT_ADDR: this.addr }
         : this.processEnv;
     try {
-      return this.execSyncFn(cmd, {
+      return this.execFileSyncFn('vault', [subcommand, ...args], {
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'pipe'],
         env,
       }).trim();
     } catch (error: unknown) {
-      throw createVaultCliError(`vault command failed: \`${cmd}\``, {
-        cause: error,
-      });
+      // Only the subcommand and its verb: later args can carry secret values.
+      throw createVaultCliError(
+        `vault command failed: \`vault ${subcommand} ${args[0] ?? ''}\``,
+        { cause: error }
+      );
     }
   }
 
@@ -251,7 +231,7 @@ export class VaultCli {
       'patch',
       `-mount=${this.mount}`,
       path,
-      `${key}=${shellEscape(value)}`,
+      `${key}=${value}`,
     ]);
   }
 
@@ -269,7 +249,7 @@ export class VaultCli {
       'put',
       `-mount=${this.mount}`,
       path,
-      `${key}=${shellEscape(value)}`,
+      `${key}=${value}`,
     ]);
   }
 

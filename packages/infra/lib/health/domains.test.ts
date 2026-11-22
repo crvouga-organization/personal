@@ -54,7 +54,7 @@ describe('retained Squarespace domains', () => {
     expect(results.find((row) => row.name === `${domain}: registration`)?.status).toBe('pass');
     expect(results.find((row) => row.name === `${domain}: existing delegation`)?.status).toBe('pass');
     expect(results.some((row) => row.status === 'fail' || row.status === 'skip')).toBe(false);
-    expect(seen.some((url) => url.includes('api.cloudflare.com'))).toBe(false);
+    expect(seen.some((url) => new URL(url).hostname === 'api.cloudflare.com')).toBe(false);
   });
 
   test('unavailable RDAP is a failure, never proof of retained ownership', async () => {

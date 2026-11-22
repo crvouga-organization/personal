@@ -116,7 +116,7 @@ export function renderText(report: HealthReport, options: TextOptions): string {
 }
 
 function escapeCell(text: string): string {
-  return text.replace(/\|/g, "\\|").replace(/\r?\n/g, " ");
+  return text.replace(/[\\|]/g, "\\$&").replace(/\r?\n/g, " ");
 }
 
 /** GitHub-flavored markdown, written to the Actions job summary. */

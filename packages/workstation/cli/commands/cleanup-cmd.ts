@@ -95,12 +95,17 @@ function parseGrace(raw: string | undefined): number {
   return seconds * 1000;
 }
 
+/** `--protect` is literal text, never a user-supplied regex. */
+function literalPattern(text: string): RegExp {
+  return new RegExp(text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+}
+
 function buildPlan(snapshot: ProcessInfo[], opts: CleanupCmdOpts): CleanupPlan {
   return planCleanup(snapshot, {
     selfPid: process.pid,
     uid: process.getuid?.() ?? -1,
     includeTools: opts.includeTools === true,
-    protect: (opts.protect ?? []).map((p) => new RegExp(p, 'i')),
+    protect: (opts.protect ?? []).map(literalPattern),
   });
 }
 
@@ -202,7 +207,7 @@ export function registerCleanup(
     )
     .option(
       '--protect <pattern...>',
-      'Regex (case-insensitive) of commands to never kill, with their children'
+      'Text (case-insensitive) in commands to never kill, with their children'
     )
     .option('--grace <seconds>', 'SIGTERM grace period before SIGKILL', '3')
     .action(
