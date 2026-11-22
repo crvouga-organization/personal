@@ -34,7 +34,9 @@ on Unix or `-WorkspaceDir C:\path\workspace` on Windows. An existing checkout is
 reused, never reset or implicitly pulled. From a checkout, run
 `bash scripts/dev/bootstrap.sh` or `& ./scripts/dev/bootstrap.ps1`.
 
-The scripts install checksum-verified mise **2026.10.24**, trust this repository's
+The scripts install checksum-verified mise **2026.10.24** unless that or a newer
+mise is already installed (a newer one is never downgraded: on a fleet machine it
+is dev-fleet's and its global config requires it), trust this repository's
 configuration, install pinned Bun, install the shared tools with `--locked`, copy
 the managed global config/lock/sidecars, set up persistent shims on PATH, and run
 `bun install --frozen-lockfile`. Reopen your terminal/editor afterward. To refresh

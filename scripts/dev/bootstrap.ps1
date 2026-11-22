@@ -29,7 +29,18 @@ if ($env:PROCESSOR_ARCHITECTURE -ne 'AMD64') { throw 'Use Windows x64 PowerShell
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $Temp = Join-Path ([IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString())
 New-Item -ItemType Directory -Path $Temp | Out-Null
+$Bin = "$HOME\.local\bin"
+# $MiseVersion is the minimum and the version installed when mise is missing or
+# older. A newer mise is kept: on a fleet machine dev-fleet owns it and its
+# global config may require that newer version.
+$MiseIsCurrent = $false
+if (Test-Path "$Bin\mise.exe") {
+  $Installed = ((& "$Bin\mise.exe" --version 2>$null) -split '\s+')[0]
+  $Parsed = $null
+  if ([version]::TryParse($Installed, [ref]$Parsed)) { $MiseIsCurrent = $Parsed -ge [version]$MiseVersion }
+}
 try {
+  if (-not $MiseIsCurrent) {
   $Asset = "mise-v$MiseVersion-windows-x64.zip"
   $Base = "https://github.com/jdx/mise/releases/download/v$MiseVersion"
   Invoke-WebRequest "$Base/$Asset" -OutFile "$Temp\$Asset" -UseBasicParsing
@@ -39,9 +50,9 @@ try {
   $Expected = ($Line -split '\s+')[0]
   if ((Get-FileHash "$Temp\$Asset" -Algorithm SHA256).Hash -ne $Expected) { throw 'mise checksum mismatch.' }
   Expand-Archive "$Temp\$Asset" -DestinationPath $Temp
-  $Bin = "$HOME\.local\bin"
   New-Item -ItemType Directory -Force -Path $Bin | Out-Null
   Copy-Item "$Temp\mise\bin\*.exe" $Bin -Force
+  }
   $env:Path = "$Bin;$env:Path"
   Set-Location $WorkspaceDir
   Invoke-Checked mise @('trust', (Join-Path $WorkspaceDir 'mise.toml'))
