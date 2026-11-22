@@ -1,138 +1,53 @@
-# Workspace
+# Personal
 
-Bun + Turborepo monorepo for the portfolio at https://www.chrisvouga.dev, a dormant Turborepo remote cache, an OpenBao secrets service, shared libraries and local workstation tools.
+Bun + Turborepo monorepo for [chrisvouga.dev](https://www.chrisvouga.dev), its cloud platform, shared libraries and local workstation tools. Agents start with [AGENTS.md](AGENTS.md).
 
-Infrastructure is managed exclusively by **OpenTofu**. The resource definitions, canonical hosting inventory, provider locks and migration instructions live in [packages/infra/tofu](packages/infra/tofu/README.md). No custom provisioning or reconciliation controllers remain.
+## Setup
+
+Follow the [shared machine bootstrap](scripts/dev/README.md) (macOS, Windows or Linux). It installs the pinned mise toolchain and frozen dependencies.
 
 ```bash
 bun install
-bun run check                 # requires OpenTofu 1.13.0 and Playwright Chromium
-bun run infra plan            # foundation: Railway project, Vault host, PlanetScale Postgres, R2, Cloudflare, GitHub
-bun run infra:bootstrap plan  # initialization and seal state
-bun run infra:vault plan      # policies, authentication, tokens and KV values
-bun run infra:services plan      # application services, images, variables and DNS
+bun run dev          # start the active applications
+bun run check        # everything CI checks (needs OpenTofu 1.13.0 and Playwright Chromium)
+bun run gh:ci:watch  # after pushing; a green local check is not green CI
 ```
 
-Import existing resources before applying. State and plans are encrypted; credentials and secret tfvars are never committed. See the migration guide for bootstrap and import prerequisites.
+## Packages
 
-| Package                                                                                    | Purpose                                                                   |
-| ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------- |
-| `portfolio`                                                                                | Astro static site, content registry, GitHub insights and generated resume |
-| `turborepo-remote-cache`                                                                   | Dormant Bun cache server; source and tests retained                       |
-| `infra`                                                                                    | OpenTofu infrastructure and read-only build/health adapters               |
-| `vault-service`                                                                            | OpenBao runtime image and local Vault auth/read CLI                       |
-| `9router`                                                                                  | Railway routing app with ephemeral SQLite and shared R2 backups           |
-| `zoomies`                                                                                  | Self-hosted GitHub Actions runner controller on Railway                   |
-| `workstation`                                                                              | Portable local machine configuration; `personal` CLI                      |
-| `assert`, `logger`, `object-store`, `openrouter`, `secret-store`, `secret-string`, `vault` | Shared libraries                                                          |
+| Package                                                                                                                | Purpose                                               |
+| ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| [`portfolio`](packages/portfolio)                                                                                      | Astro site, GitHub insights and generated resume      |
+| [`infra`](packages/infra/tofu/README.md)                                                                               | OpenTofu infrastructure and read-only health adapters |
+| [`vault-service`](packages/vault-service)                                                                              | OpenBao runtime image and Vault CLI                   |
+| [`auth-relay`](packages/auth-relay/README.md)                                                                          | Shared Google-to-OIDC broker                          |
+| [`9router`](packages/9router)                                                                                          | Railway routing app with SQLite replicated to R2      |
+| [`zoomies`](packages/zoomies/README.md)                                                                                | Self-hosted GitHub Actions runner controller          |
+| [`personal-cli`](packages/personal-cli/README.md)                                                                      | The `personal` CLI                                    |
+| [`workstation`](packages/workstation/README.md)                                                                        | Portable dev-machine configuration                    |
+| [`password-manager`](packages/password-manager/README.md)                                                              | Local account discovery and Bitwarden maintenance     |
+| [`turborepo-remote-cache`](packages/turborepo-remote-cache)                                                            | Dormant cache server                                  |
+| `admin-ui`, `assert`, `logger`, `object-store`, `openrouter`, `secret-store`, `secret-string`, `vault`, `eslint-rules` | Shared libraries                                      |
 
-[CI](.github/workflows/ci.yml) validates every PR and merge-queue entry, runs the required platform tests, and calls [Deploy](.github/workflows/deploy.yml) after successful main-branch checks. Deploy builds images, applies OpenTofu in order and probes production. [Maintenance](.github/workflows/maintenance.yml) handles health reports, snapshot/dependency update PRs and manual secret repair. Sibling repositories use [Publish](.github/workflows/publish.yml); the old CI publishing interface stays compatible. OpenTofu owns publisher files, dispatch secrets and the required-check ruleset.
+## Infrastructure
 
-Agent infrastructure docs are two separate generated guides that never share content: [llms-local.txt](llms-local.txt) covers **local development infrastructure** (developer machines, toolchain, fleet, AI proxy, local caching) and [llms-cloud.txt](llms-cloud.txt) covers **cloud app infrastructure** (Vault, PostgreSQL, R2, Railway hosting, auth relay). The root [llms.txt](llms.txt) is only an index that routes to one of them. The portfolio publishes them at [/llms-infra.txt](https://www.chrisvouga.dev/llms-infra.txt) (index), [/llms-local.txt](https://www.chrisvouga.dev/llms-local.txt) and [/llms-cloud.txt](https://www.chrisvouga.dev/llms-cloud.txt); the site's own `/llms.txt` is a candidate summary for recruiters' screening agents and links to them. Regenerate with `bun run llms:sync`.
-
-Local setup: follow [the shared machine bootstrap](scripts/dev/README.md) for macOS, native Windows or Linux. It installs the pinned mise toolchain globally and frozen workspace dependencies. `bun run setup` installs dependencies only; `vault login` enables managed application settings. `bun run dev` starts the active applications; the retired Turbo/Nix cache stays dormant. [Workstation setup](packages/workstation/README.md) uses `bun run personal:install`.
-
-After pushing, watch the complete CI run with `bun run gh:ci:watch`; local checks do not validate production deployment.
-
-Development computers are managed by [dev-fleet](https://github.com/crvouga/dev-fleet).
-This repository holds only this fleet's `fleet.json` and the pinned `fleet.revision`.
-`bun run fleet:preview` previews a sync, `bun run fleet:sync` applies it and
-`bun run fleet:health` is the read-only report; each runs dev-fleet at that pin
-(see [AGENTS.md](AGENTS.md#the-fleet-runs-from-dev-fleet)). Developer
-membership is separate from cloud inventory; `health` remains the cloud report.
-
-## Update secrets
+Cloud resources are managed only by **OpenTofu** — see [packages/infra/tofu](packages/infra/tofu/README.md).
 
 ```bash
-bun run vault:edit             # interactive secret editor
-bun run vault:edit --google    # Google client ID and secret together
-bun run vault:edit --dry-run   # review plans without applying
-bun run vault:edit --demo      # explore with synthetic data; no live connections
+bun run infra plan           # foundation
+bun run infra:bootstrap plan # initialization and seal state
+bun run infra:vault plan     # policies, auth and KV values
+bun run infra:services plan  # services, images and DNS
+bun run health               # read-only platform report (--drift, --only, --json)
+bun run vault:edit           # interactive secret editor (--dry-run, --demo)
 ```
 
-Choose production, development or both, then enter hidden values. The editor
-offers registered operator-supplied keys, searchable by name or consuming app.
-Enter keeps the existing value in each environment. The review shows key names
-and whether each value will be added, replaced or synchronized; values stay hidden.
+[CI](.github/workflows/ci.yml) gates every PR and calls [Deploy](.github/workflows/deploy.yml) on `main`. [Maintenance](.github/workflows/maintenance.yml) runs daily health and update PRs.
 
-The editor preserves the complete managed input maps, administrator passwords and
-unrecognized input maps. It saves the persistent deployment inputs through the foundation
-OpenTofu root, then updates Vault. Google changes also update the selected relay
-instances directly through the auth root; the screen shows the exact Google
-redirect URIs. Other applications that load secrets at startup need a subsequent
-deployment. Production provider-token changes also update their managed CI copy.
+## Fleet
 
-Run from an interactive terminal with the pinned tools (`mise install`) and
-`vault login` as an administrator. State and deployment credentials load
-automatically from the OpenTofu-managed, admin-only `secret/infra/operator`
-document. The editor never asks for R2 keys, state encryption material or provider
-credentials. Application and CI read tokens cannot access that document. If its
-setup is missing, the command stops with a setup error; deploy the Vault OpenTofu
-root through CI, which already has the bootstrap credentials, then retry.
-Every apply requires approval of a saved plan. The editor refuses missing adopted
-resources, replacements, deletions and unselected field changes. Temporary inputs
-are private to the run and removed on exit. Cancelling during an apply does not
-roll back completed operations; after a partial failure, re-run with the same
-values to finish synchronization. `--dry-run` still needs state/provider access;
-`--demo` needs none.
+Developer machines are managed by [dev-fleet](https://github.com/crvouga/dev-fleet); this repo holds only `fleet.json` and the pinned `fleet.revision`. Use `bun run fleet:preview`, `fleet:sync` and `fleet:health`.
 
-Use `bun run vault:fix` to repair missing deployment inputs. `vault:secrets` remains
-the lower-level complete-map renderer, rather than an editor for individual keys.
+## Agent guides
 
-## Infra health
-
-All 14 domain registrations remain at Squarespace. The Cloudflare migration is cancelled; the four existing Cloudflare DNS zones are preserved. `bun domains inventory` and `bun domains discover` provide read-only observations. See the [cancellation record](packages/infra/docs/domain-migration.md) for cleanup evidence and the accepted unused-domain DNSSEC setting.
-
-`bun run health` is the single place to check whether the platform is configured correctly and healthy. It reads the OpenTofu inventory and reports on everything it declares:
-
-| Group       | Checks                                                                                  | Needs             |
-| ----------- | --------------------------------------------------------------------------------------- | ----------------- |
-| `inventory` | Offline consistency: unique ids and hostnames, dangling references, policy files        | —                 |
-| `dns`       | Cloudflare delegation and every declared record                                         | —                 |
-| `domains`   | Retained registration/delegation, DNSSEC, existing DNS records and HTTPS                | Cloudflare token  |
-| `tls`       | Certificate trust and expiry for every public hostname                                  | —                 |
-| `services`  | Each Railway service's health endpoint; Cloudflare redirects                            | —                 |
-| `tunnels`   | Cloudflare tunnel connectors (an offline workstation connector warns)                   | —                 |
-| `vault`     | Seal state and shares; KV mount, policies, auth roles, users and required KV keys       | Vault token       |
-| `storage`   | R2 buckets, PostgreSQL, service databases (`SELECT 1`)                                  | Vault token       |
-| `images`    | Every deployed GHCR image is publicly pullable                                          | —                 |
-| `github`    | Repositories, publisher workflows, dispatch secrets, merge gate, last production CI run | GitHub token      |
-| `drift`     | State objects exist; with `--drift`, `tofu plan` finds nothing to change in any root    | initialized roots |
-
-```bash
-bun run health                       # everything except tofu plan, a few seconds
-bun run health --verbose             # list passing checks too
-bun run health --drift               # also plan every initialized OpenTofu root
-bun run health --only services,vault # a subset; --skip excludes
-bun run health --json                # machine-readable
-```
-
-It is read-only: probes, reads and unlocked plans. A check that cannot run (no `vault login`, no `gh auth login`, root not initialized) reports `SKIP` with the reason and never counts as a pass. The exit code is 1 on any failure; `--strict` also fails on warnings and skips.
-
-The read-only Health job in [Maintenance](.github/workflows/maintenance.yml) runs the full report, including drift, every day and on demand (`gh workflow run maintenance.yml -f task=health`); its job summary is the same report. `bun run health-check` remains the narrower post-deploy URL probe used inside CI.
-
-## Password manager
-
-Local account discovery and Bitwarden maintenance live in
-[`packages/password-manager`](packages/password-manager/README.md). Start with
-`sh scripts/password-manager-setup.sh`; root `bun run password-manager ...`
-commands operate outside Turbo. State and credentials remain private and local.
-See the package's operator guide and acceptance ledger for the supported automation
-and the distinction between fixture-tested and live-verified behavior.
-
-The former machine-management application has been removed. [Application decommissioning](packages/infra/docs/application-decommission.md) documents pending destructive OpenTofu review and temporary state/status compatibility. No live resource changes have been applied by this extraction.
-
-## One shared developer setup
-
-For a new macOS, native Windows or Linux machine, follow
-[`scripts/dev/README.md`](scripts/dev/README.md). The two OS bootstraps install
-one shared mise manifest/lockfile globally, configure tool shims, and install
-frozen workspace dependencies. It covers Node/npm (mise replaces nvm), Bun,
-pnpm/Yarn, Python/uv, Go, GitHub CLI/Git LFS, shell utilities, provider CLIs,
-OpenTofu and Docker CLI. Git/native build tools and the Docker engine remain
-explicit OS prerequisites. After setup, `personal workstation tools sync` reapplies tools,
-`personal workstation tools check --json` verifies them, and `personal workstation update` pulls and refreshes tools,
-dependencies and workstation settings.
-
-Agents can discover the full machine runbook from the portfolio's `/llms.txt`;
-it is embedded in the generated local guide, root `llms-local.txt`, served at `/llms-local.txt`.
+[llms-local.txt](llms-local.txt) (machines and toolchain) and [llms-cloud.txt](llms-cloud.txt) (cloud apps) are generated from templates; [llms.txt](llms.txt) routes between them. Regenerate with `bun run llms:sync`.
