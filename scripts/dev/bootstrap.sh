@@ -47,10 +47,19 @@ else
   }
 fi
 cd "$checkout"
-# Reuse an observed matching managed executable. Repeated reconciliation must
-# not download/reinstall mise solely because a previous run finished.
+# MISE_VERSION is the minimum (mise.toml min_version) and the version installed
+# when mise is missing or older. A newer mise is kept: on a fleet machine
+# dev-fleet owns ~/.local/bin/mise and its global config may require that newer
+# version, so replacing it with this pin would break every mise command there,
+# fleet-sync included.
 installed_mise=$("$HOME/.local/bin/mise" --version 2>/dev/null | awk '{print $1}') || installed_mise=''
-if [[ "$installed_mise" != "$MISE_VERSION" ]]; then
+mise_is_current() {
+  [[ "$installed_mise" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1
+  local oldest
+  oldest=$(printf '%s\n%s\n' "$installed_mise" "$MISE_VERSION" | sort -t. -k1,1n -k2,2n -k3,3n | head -n 1)
+  [[ "$oldest" == "$MISE_VERSION" ]]
+}
+if ! mise_is_current; then
 temp=$(mktemp -d)
 trap 'rm -rf "$temp"' EXIT
 asset="mise-v${MISE_VERSION}-${platform}-${arch}.tar.gz"
