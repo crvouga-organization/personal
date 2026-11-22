@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "fetchedAt": "2026-11-22T02:18:29.343Z",
+  "fetchedAt": "2026-11-22T20:19:28.557Z",
   "window": { "from": "2026-09-17", "to": "2026-11-22" },
   "workspace": {
     "repo": "crvouga/personal",
-    "mergedPrs": 206,
-    "automatedPrsExcluded": 64,
+    "mergedPrs": 210,
+    "automatedPrsExcluded": 66,
     "automationPatterns": ["chore/github-insights-refresh"],
     "prsFailedCiBeforeMerge": 43,
     "prsFailedCiBeforeMergeNumbers": [
@@ -13,7 +13,7 @@
       127, 129, 131, 141, 152, 153, 156, 158, 170, 173, 187, 189, 191, 202, 204,
       213, 217, 218, 220, 236, 244, 247, 250, 251, 252, 294
     ],
-    "aiCoAuthoredPrs": 106,
+    "aiCoAuthoredPrs": 110,
     "aiCoAuthoredPrNumbers": [
       3, 4, 6, 7, 11, 13, 14, 16, 17, 20, 28, 54, 55, 59, 61, 63, 89, 90, 91,
       92, 93, 96, 97, 98, 99, 100, 101, 103, 104, 106, 107, 108, 109, 110, 111,
@@ -21,9 +21,9 @@
       220, 224, 225, 226, 227, 229, 231, 232, 233, 234, 235, 236, 237, 239, 242,
       243, 244, 246, 247, 250, 251, 252, 257, 258, 259, 260, 261, 262, 263, 264,
       265, 266, 267, 268, 270, 273, 275, 276, 278, 280, 284, 285, 286, 294, 318,
-      319, 320, 323, 325, 327, 330, 332, 335, 336, 337, 338
+      319, 320, 323, 325, 327, 330, 332, 335, 336, 337, 338, 341, 342, 345, 347
     ],
-    "pullRequestRunsExamined": 971,
+    "pullRequestRunsExamined": 991,
     "earlierAttemptsExamined": 21
   },
   "repos": [
@@ -32,48 +32,48 @@
       "url": "https://github.com/crvouga/mockingbird",
       "defaultBranch": "main",
       "stars": 5,
-      "commits": 1576,
-      "openIssues": 1,
-      "openPrs": 1,
+      "commits": 1609,
+      "openIssues": 2,
+      "openPrs": 2,
       "license": null,
       "defaultBranchCiWorkflow": "CI",
-      "defaultBranchCiConclusion": "failure",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga/mockingbird/actions/runs/44888641661",
-      "defaultBranchCiCompletedAt": "2026-11-21T09:31:08Z"
+      "defaultBranchCiConclusion": "success",
+      "defaultBranchCiRunUrl": "https://github.com/crvouga/mockingbird/actions/runs/45002043011",
+      "defaultBranchCiCompletedAt": "2026-11-22T08:31:19Z"
     },
     {
       "repo": "crvouga/headless-combobox",
       "url": "https://github.com/crvouga/headless-combobox",
       "defaultBranch": "main",
       "stars": 46,
-      "commits": 349,
+      "commits": 350,
       "openIssues": 0,
       "openPrs": 0,
       "license": null,
-      "defaultBranchCiWorkflow": "CD",
+      "defaultBranchCiWorkflow": "Publish image",
       "defaultBranchCiConclusion": "success",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga/headless-combobox/actions/runs/44882206654",
-      "defaultBranchCiCompletedAt": "2026-11-21T07:56:03Z"
+      "defaultBranchCiRunUrl": "https://github.com/crvouga/headless-combobox/actions/runs/44882206964",
+      "defaultBranchCiCompletedAt": "2026-11-21T07:52:36Z"
     },
     {
       "repo": "crvouga/personal",
       "url": "https://github.com/crvouga/personal",
       "defaultBranch": "main",
       "stars": 1,
-      "commits": 2030,
-      "openIssues": 3,
-      "openPrs": 3,
+      "commits": 2036,
+      "openIssues": 0,
+      "openPrs": 0,
       "license": null,
       "defaultBranchCiWorkflow": "CI",
-      "defaultBranchCiConclusion": "cancelled",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga/personal/actions/runs/44888780415",
-      "defaultBranchCiCompletedAt": "2026-11-22T02:17:08Z"
+      "defaultBranchCiConclusion": "failure",
+      "defaultBranchCiRunUrl": "https://github.com/crvouga/personal/actions/runs/45019488831",
+      "defaultBranchCiCompletedAt": "2026-11-22T12:02:07Z"
     }
   ],
   "mockingbird": {
-    "commit": "6067396700a7a49b0b2c1e020ed5d20171119dcb",
-    "testFiles": 1346,
-    "testCallSites": 5517,
+    "commit": "ba823ec3454dc5b9ae24a775f0722edfb180527d",
+    "testFiles": 1356,
+    "testCallSites": 5599,
     "publishedPackages": 133,
     "emulators": 127,
     "wipEmulators": 16,
@@ -82,11 +82,11 @@
   "mockingbirdCatalog": {
     "url": "https://mockingbird.chrisvouga.dev/catalog.json",
     "services": 127,
-    "opsSupported": 1753,
-    "opsTotal": 1911
+    "opsSupported": 1758,
+    "opsTotal": 1913
   },
   "headlessCombobox": {
-    "commit": "6be6caa861ba7dfe3aba81c0179fe0119aa4433a",
+    "commit": "7f69acff44a43d62af00b53d8b7511c1ec04790a",
     "testFiles": 9,
     "testCallSites": 87
   }
