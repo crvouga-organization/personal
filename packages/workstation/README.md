@@ -523,7 +523,7 @@ or tool pins, then `bun run check:llms` to verify all published copies.
 ## Fleet
 
 Fleet machines, agent launchers and profiles, T3 provider instances and
-monitoring are managed by [dev-fleet](https://github.com/crvouga-organization/dev-fleet)
+monitoring are managed by [dev-fleet](https://github.com/crvouga/dev-fleet)
 (this repository pins it in `fleet.revision` and configures it in `fleet.json`).
 `personal workstation agents …` is dev-fleet's agent profile command, imported
 from the `@crvouga/dev-fleet` package.

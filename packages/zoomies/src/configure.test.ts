@@ -91,7 +91,7 @@ test('never recreates or modifies a pool tuned in the UI', async () => {
       {
         id: 'ins_9',
         installation_id: 456,
-        target: 'crvouga-organization/personal',
+        target: 'crvouga/personal',
       },
     ],
     pools: POOLS.map((pool) => ({

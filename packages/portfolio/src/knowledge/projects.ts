@@ -19,7 +19,7 @@ export const PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/mockingbird',
+      url: 'https://github.com/crvouga/mockingbird',
     },
     description:
       'Realistic stand-ins for third-party services, so software can be tested end to end without calling the real thing.',
@@ -71,7 +71,7 @@ export const PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/personal',
+      url: 'https://github.com/crvouga/personal',
     },
     description:
       'The monorepo and self-hosted platform behind this site and my side projects, where declared code is the only way to change infrastructure.',
@@ -151,7 +151,7 @@ export const PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/headless-combobox',
+      url: 'https://github.com/crvouga/headless-combobox',
     },
     description:
       'An accessible autocomplete component that works with any interface framework, published as an open-source library.',
@@ -209,7 +209,7 @@ export const PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/normalizer.app.git',
+      url: 'https://github.com/crvouga/normalizer.app.git',
     },
     description:
       'Automates the tedious work of reshaping spreadsheet data from one format into another.',
@@ -235,7 +235,7 @@ export const PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/image-service',
+      url: 'https://github.com/crvouga/image-service',
     },
     description:
       'A self-hosted service that resizes and optimizes images on demand, with no configuration required.',
@@ -251,7 +251,7 @@ export const PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/screenshot-service',
+      url: 'https://github.com/crvouga/screenshot-service',
     },
     description:
       'A service for capturing screenshots of web pages programmatically.',
@@ -279,7 +279,7 @@ export const PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/moviefinder.app-rust',
+      url: 'https://github.com/crvouga/moviefinder.app-rust',
     },
     description:
       'One movie-discovery app rebuilt on several technology stacks, holding the product constant to compare their real trade-offs.',
@@ -335,7 +335,7 @@ export const PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/violets-garden',
+      url: 'https://github.com/crvouga/violets-garden',
     },
     description:
       'A cozy puzzle game about guiding a pug through garden mazes, with every level automatically proven solvable.',
@@ -352,7 +352,7 @@ export const PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/llm-server',
+      url: 'https://github.com/crvouga/llm-server',
     },
     description:
       'A self-hosted gateway that routes AI model requests to any provider and records usage for cost and health visibility.',

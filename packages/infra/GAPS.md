@@ -38,10 +38,10 @@ The live `main` ruleset has `require_extra_approval_for_unattributed_changes: tr
 GitHub). It has no effect with zero required approvals. To clear it:
 
 ```bash
-gh api repos/crvouga-organization/personal/rulesets/23686210 > /tmp/ruleset.json
+gh api repos/crvouga/personal/rulesets/23686210 > /tmp/ruleset.json
 jq '(.rules[] | select(.type=="pull_request") | .parameters.require_extra_approval_for_unattributed_changes) = false
     | {name, target, enforcement, conditions, rules, bypass_actors}' /tmp/ruleset.json \
-  | gh api -X PUT repos/crvouga-organization/personal/rulesets/23686210 --input -
+  | gh api -X PUT repos/crvouga/personal/rulesets/23686210 --input -
 ```
 
 ## Secret scanning extras
@@ -50,7 +50,7 @@ The provider omits non-provider patterns and validity checks (see `repository.tf
 protection and secret scanning are managed; gitleaks also runs in CI. Optional:
 
 ```bash
-gh api -X PATCH repos/crvouga-organization/personal \
+gh api -X PATCH repos/crvouga/personal \
   -f 'security_and_analysis[secret_scanning_non_provider_patterns][status]=enabled' \
   -f 'security_and_analysis[secret_scanning_validity_checks][status]=enabled'
 ```

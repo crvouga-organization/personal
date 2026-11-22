@@ -4,10 +4,10 @@
  *
  * Primary CI workflow, in order of preference:
  *   1. the active workflow named exactly `CI` (case-insensitive) — in
- *      crvouga-organization/mockingbird that is `pr.yml`, while its `ci.yml` is "Release";
+ *      crvouga/mockingbird that is `pr.yml`, while its `ci.yml` is "Release";
  *   2. the active workflow whose file is `ci.yml` / `ci.yaml`;
  *   3. otherwise whichever workflow ran the most recent completed `push` run
- *      on the default branch (crvouga-organization/headless-combobox has only `CD`).
+ *      on the default branch (crvouga/headless-combobox has only `CD`).
  * For 1 and 2 the workflow's latest *completed* run on the default branch (any
  * event) supplies the conclusion; for 3 that push run does. No completed run
  * gives `null`.

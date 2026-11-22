@@ -5,7 +5,7 @@ Merging to `main` applies it through **Deploy**. Agent rules: [`AGENTS.md`](AGEN
 root [`AGENTS.md`](../../AGENTS.md). Audit of the agent-first workflow: [`AUDIT.md`](AUDIT.md).
 Settings the provider cannot express: [`GAPS.md`](GAPS.md).
 
-## GitHub merge gate (`crvouga-organization/personal`)
+## GitHub merge gate (`crvouga/personal`)
 
 Defined in `tofu/modules/inventory/inventory.tf.json` (`github.pr_ready`) and
 `tofu/foundation/repository.tf`:
@@ -23,9 +23,9 @@ Freezing adds a required check named `frozen` that nothing reports, so no PR can
 
 ```bash
 # Freeze main
-gh workflow run freeze.yml -R crvouga-organization/personal -f frozen=true
+gh workflow run freeze.yml -R crvouga/personal -f frozen=true
 # Unfreeze main
-gh workflow run freeze.yml -R crvouga-organization/personal -f frozen=false
+gh workflow run freeze.yml -R crvouga/personal -f frozen=false
 # Confirm (lists the required checks on main)
 gh api repos/crvouga/personal/rulesets --jq '.[].id' | xargs -I{} gh api repos/crvouga/personal/rulesets/{} \
   --jq '.rules[] | select(.type=="required_status_checks") | .parameters.required_status_checks[].context'
@@ -38,4 +38,4 @@ plan reads as `TF_VAR_freeze`, then applies only the `main` ruleset.
 
 `.github/workflows/drift.yml` plans every `github_*` resource daily. A non-empty plan opens or
 updates one `drift` issue; a clean plan closes it. Run it on any branch to preview that branch's
-GitHub changes before merging: `gh workflow run drift.yml -R crvouga-organization/personal --ref <branch>`.
+GitHub changes before merging: `gh workflow run drift.yml -R crvouga/personal --ref <branch>`.

@@ -37,7 +37,7 @@ defaults:
 jobs:
   deploy:
     name: Deploy
-    if: github.repository == 'crvouga-organization/personal' && github.ref == 'refs/heads/main'
+    if: github.repository == 'crvouga/personal' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 120
     concurrency:
@@ -136,7 +136,7 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/crvouga/chrisvouga-vault:buildcache
           cache-to: type=registry,ref=ghcr.io/crvouga/chrisvouga-vault:buildcache,mode=max,ignore-error=true
           labels: >
-            org.opencontainers.image.source=https://github.com/crvouga-organization/personal
+            org.opencontainers.image.source=https://github.com/crvouga/personal
 
             org.opencontainers.image.description=Standalone OpenBao vault for
             chrisvouga.dev
@@ -234,7 +234,7 @@ jobs:
   failure_issues:
     name: Open or close failure issues
     if: "!cancelled() && github.event_name != 'push' && github.ref == 'refs/heads/main' &&
-      github.repository == 'crvouga-organization/personal'"
+      github.repository == 'crvouga/personal'"
     needs: deploy
     runs-on: ubuntu-latest
     timeout-minutes: 5

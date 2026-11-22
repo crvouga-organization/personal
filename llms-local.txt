@@ -1,18 +1,18 @@
-# crvouga-organization/personal — LOCAL development infrastructure guide
+# crvouga/personal — LOCAL development infrastructure guide
 
 > **Scope: developer machines only.** Use this guide for everything that runs on or configures a computer used for development: the locked mise toolchain, workstation configuration, the container engine, the `personal` CLI, the Ubuntu developer fleet (one macOS manager, stateless Ubuntu workers), T3, the private fleet AI proxy (CLIProxyAPI), Beszel monitoring, Turborepo caching and disposable test databases. Generated from `scripts/dev/README.md` and `mise.toml`; tools and dependency graphs are pinned in `mise.lock` and `.mise/locks/`.
 
 **This guide never covers cloud-hosted app infrastructure.** Vault/OpenBao coordinates and policies, PostgreSQL `DATABASE_URL`, the R2 object store, Railway hosting, GHCR images, DNS/TLS, GitHub OIDC and the Google sign-in auth relay are **cloud app infrastructure** → https://www.chrisvouga.dev/llms-cloud.txt. If your task is about any of those, stop and use that guide instead. Do not mix the two.
 
-Canonical deployed URL: https://www.chrisvouga.dev/llms-local.txt · Index of both guides: https://www.chrisvouga.dev/llms-infra.txt · Source snapshot (current `main`): https://raw.githubusercontent.com/crvouga-organization/personal/main/llms-local.txt
+Canonical deployed URL: https://www.chrisvouga.dev/llms-local.txt · Index of both guides: https://www.chrisvouga.dev/llms-infra.txt · Source snapshot (current `main`): https://raw.githubusercontent.com/crvouga/personal/main/llms-local.txt
 
 ## Local vs cloud: the boundary
 
 | Question | Local (this guide) | Cloud (the other guide) |
 | --- | --- | --- |
 | Where does it run? | A developer's computer or a fleet node | Railway, Cloudflare, managed PostgreSQL, GHCR, GitHub Actions |
-| Who owns it? | mise (`mise.toml`, `mise.lock`), `packages/workstation`, [dev-fleet](https://github.com/crvouga-organization/dev-fleet) with this repository's `fleet.json` | OpenTofu in `crvouga-organization/personal` only |
-| How is it changed? | The documented local commands below, when the user asks for machine setup | A GitHub issue on `crvouga-organization/personal`, then a reviewed OpenTofu PR |
+| Who owns it? | mise (`mise.toml`, `mise.lock`), `packages/workstation`, [dev-fleet](https://github.com/crvouga/dev-fleet) with this repository's `fleet.json` | OpenTofu in `crvouga/personal` only |
+| How is it changed? | The documented local commands below, when the user asks for machine setup | A GitHub issue on `crvouga/personal`, then a reviewed OpenTofu PR |
 
 Rules:
 
@@ -26,7 +26,7 @@ Rules:
 
 ## Machine setup: macOS, Windows and Linux
 
-This is the shared development setup for **crvouga-organization/personal**. One versioned
+This is the shared development setup for **crvouga/personal**. One versioned
 manifest, `mise.toml`, owns the developer tools; `mise.lock` and `.mise/locks/`
 own resolved artifacts and dependency graphs. Both bootstraps apply that same
 manifest to the current user globally. Other projects can override versions with
@@ -38,14 +38,14 @@ install the toolchain.
 macOS / Linux, in Bash (download first so the script is reviewable):
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/crvouga-organization/personal/main/scripts/dev/bootstrap.sh -o /tmp/workspace-bootstrap.sh
+curl -fsSL https://raw.githubusercontent.com/crvouga/personal/main/scripts/dev/bootstrap.sh -o /tmp/workspace-bootstrap.sh
 bash /tmp/workspace-bootstrap.sh
 ```
 
 Native Windows, in x64 PowerShell (5.1 or newer):
 
 ```powershell
-Invoke-WebRequest https://raw.githubusercontent.com/crvouga-organization/personal/main/scripts/dev/bootstrap.ps1 -OutFile "$env:TEMP\workspace-bootstrap.ps1"
+Invoke-WebRequest https://raw.githubusercontent.com/crvouga/personal/main/scripts/dev/bootstrap.ps1 -OutFile "$env:TEMP\workspace-bootstrap.ps1"
 & "$env:TEMP\workspace-bootstrap.ps1"
 ```
 
@@ -295,7 +295,7 @@ without pulling or touching project dependencies; `personal workstation tools ch
 them. Sync is explicit; Git commits do not silently update other machines.
 
 Multiple development computers are kept in sync by
-[dev-fleet](https://github.com/crvouga-organization/dev-fleet), run from this checkout at the
+[dev-fleet](https://github.com/crvouga/dev-fleet), run from this checkout at the
 pinned `fleet.revision` with `fleet.json` (see [T3 project actions](#t3-project-actions)).
 Fleet machines get their toolchain from dev-fleet's own pins, not from this file:
 when the global mise config carries dev-fleet's marker, setup installs this
@@ -343,7 +343,7 @@ Actions: `warm`, `portfolio`, `workstation-sync`,
 `workstation-net-fix-check`, `fleet-sync`, `fleet-preview`, `fleet-status`,
 `fleet-health`, `fleet-repair`, `fleet-t3-status`, `infra-cliproxy`.
 Workstation actions run the `personal workstation` command of the same name. The
-fleet actions and `infra-cliproxy` run [dev-fleet](https://github.com/crvouga-organization/dev-fleet)
+fleet actions and `infra-cliproxy` run [dev-fleet](https://github.com/crvouga/dev-fleet)
 at the commit pinned in `fleet.revision`, with this repository's `fleet.json`, through
 `scripts/dev/fleet.sh`. Label each T3 script `Domain: Command words` (`Fleet: Sync`,
 `Fleet: Preview`, `Fleet: Health`, `Workstation: Net check`, `Infra: Cliproxy model health`
@@ -436,7 +436,7 @@ remain per-machine prerequisites. Configuration actions affect the current machi
 domain: `infra-*` commands are thin clients of cloud infrastructure (for example
 `infra-vault run` reads cloud Vault; their contracts are in https://www.chrisvouga.dev/llms-cloud.txt),
 and `workstation` configures this machine. `bun run personal commands --json` is
-the agent catalog. See [`packages/personal-cli/README.md`](https://github.com/crvouga-organization/personal/blob/main/packages/personal-cli/README.md).
+the agent catalog. See [`packages/personal-cli/README.md`](https://github.com/crvouga/personal/blob/main/packages/personal-cli/README.md).
 
 ---
 
@@ -444,9 +444,9 @@ the agent catalog. See [`packages/personal-cli/README.md`](https://github.com/cr
 
 The fleet (one macOS manager, stateless Ubuntu workers), T3 provider instances,
 Beszel monitoring and the private CLIProxyAPI service are managed by
-[dev-fleet](https://github.com/crvouga-organization/dev-fleet); none of that code lives here.
-This repository holds only this fleet's configuration, [`fleet.json`](https://github.com/crvouga-organization/personal/blob/main/fleet.json), and the
-dev-fleet commit it runs, [`fleet.revision`](https://github.com/crvouga-organization/personal/blob/main/fleet.revision). From the checkout:
+[dev-fleet](https://github.com/crvouga/dev-fleet); none of that code lives here.
+This repository holds only this fleet's configuration, [`fleet.json`](https://github.com/crvouga/personal/blob/main/fleet.json), and the
+dev-fleet commit it runs, [`fleet.revision`](https://github.com/crvouga/personal/blob/main/fleet.revision). From the checkout:
 
 ```sh
 bun run fleet:preview        # fleet-sync --dry-run: what a sync would change
@@ -466,7 +466,7 @@ off to the manager over SSH. `fleet-sync`, `fleet-node-sync`, `t3-apply` and
 
 Never edit dev-fleet, a checkout it owns or a file it manages on a machine. A
 defect or a missing feature is an issue at
-https://github.com/crvouga-organization/dev-fleet/issues, without credentials, hostnames,
+https://github.com/crvouga/dev-fleet/issues, without credentials, hostnames,
 accounts, domains or `fleet.json` contents.
 
 Change fleet behaviour in dev-fleet, then bump `fleet.revision`. Change machines,
@@ -480,7 +480,7 @@ them and never creates or changes them.
 
 ## Turborepo caching (local only)
 
-Turborepo remote caching is retired. The server source remains dormant at [`packages/turborepo-remote-cache`](https://github.com/crvouga-organization/personal/blob/main/packages/turborepo-remote-cache). Do not configure clients, copy cache credentials or probe the former Turbo endpoint.
+Turborepo remote caching is retired. The server source remains dormant at [`packages/turborepo-remote-cache`](https://github.com/crvouga/personal/blob/main/packages/turborepo-remote-cache). Do not configure clients, copy cache credentials or probe the former Turbo endpoint.
 
 Use local caching; remove `TURBO_API`, `TURBO_TOKEN` and `TURBO_TEAM` from client environments. Replace any `TURBO_CACHE=remote:rw` setting with `TURBO_CACHE=local:rw`. In `turbo.json`, set:
 
@@ -500,6 +500,6 @@ GitHub Actions may continue persisting `.turbo` through `actions/cache`.
 
 ---
 
-## Maintaining this file (agents working inside `crvouga-organization/personal`)
+## Maintaining this file (agents working inside `crvouga/personal`)
 
-`llms-local.txt` is generated — never edit it by hand. Prose lives in [`scripts/llms-local.template.md`](https://github.com/crvouga-organization/personal/blob/main/scripts/llms-local.template.md); the embedded runbooks come from [`scripts/dev/README.md`](https://github.com/crvouga-organization/personal/blob/main/scripts/dev/README.md) and [`mise.toml`](https://github.com/crvouga-organization/personal/blob/main/mise.toml) via [`scripts/llms-txt.ts`](https://github.com/crvouga-organization/personal/blob/main/scripts/llms-txt.ts). Run `bun run llms:sync` after changing any of them; `bun run check:llms` fails CI on drift, on a dangling reference, or when cloud-only content leaks into this guide (see `BOUNDARY` in the generator).
+`llms-local.txt` is generated — never edit it by hand. Prose lives in [`scripts/llms-local.template.md`](https://github.com/crvouga/personal/blob/main/scripts/llms-local.template.md); the embedded runbooks come from [`scripts/dev/README.md`](https://github.com/crvouga/personal/blob/main/scripts/dev/README.md) and [`mise.toml`](https://github.com/crvouga/personal/blob/main/mise.toml) via [`scripts/llms-txt.ts`](https://github.com/crvouga/personal/blob/main/scripts/llms-txt.ts). Run `bun run llms:sync` after changing any of them; `bun run check:llms` fails CI on drift, on a dangling reference, or when cloud-only content leaks into this guide (see `BOUNDARY` in the generator).

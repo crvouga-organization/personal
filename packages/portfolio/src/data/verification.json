@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "fetchedAt": "2026-11-20T13:02:24.775Z",
-  "window": { "from": "2026-09-17", "to": "2026-11-20" },
+  "fetchedAt": "2026-11-22T02:18:29.343Z",
+  "window": { "from": "2026-09-17", "to": "2026-11-22" },
   "workspace": {
-    "repo": "crvouga-organization/personal",
-    "mergedPrs": 194,
-    "automatedPrsExcluded": 61,
+    "repo": "crvouga/personal",
+    "mergedPrs": 206,
+    "automatedPrsExcluded": 64,
     "automationPatterns": ["chore/github-insights-refresh"],
     "prsFailedCiBeforeMerge": 43,
     "prsFailedCiBeforeMergeNumbers": [
@@ -13,67 +13,68 @@
       127, 129, 131, 141, 152, 153, 156, 158, 170, 173, 187, 189, 191, 202, 204,
       213, 217, 218, 220, 236, 244, 247, 250, 251, 252, 294
     ],
-    "aiCoAuthoredPrs": 94,
+    "aiCoAuthoredPrs": 106,
     "aiCoAuthoredPrNumbers": [
       3, 4, 6, 7, 11, 13, 14, 16, 17, 20, 28, 54, 55, 59, 61, 63, 89, 90, 91,
       92, 93, 96, 97, 98, 99, 100, 101, 103, 104, 106, 107, 108, 109, 110, 111,
       113, 114, 141, 152, 153, 156, 168, 170, 171, 173, 174, 185, 217, 218, 219,
       220, 224, 225, 226, 227, 229, 231, 232, 233, 234, 235, 236, 237, 239, 242,
       243, 244, 246, 247, 250, 251, 252, 257, 258, 259, 260, 261, 262, 263, 264,
-      265, 266, 267, 268, 270, 273, 275, 276, 278, 280, 284, 285, 286, 294
+      265, 266, 267, 268, 270, 273, 275, 276, 278, 280, 284, 285, 286, 294, 318,
+      319, 320, 323, 325, 327, 330, 332, 335, 336, 337, 338
     ],
-    "pullRequestRunsExamined": 912,
+    "pullRequestRunsExamined": 971,
     "earlierAttemptsExamined": 21
   },
   "repos": [
     {
-      "repo": "crvouga-organization/mockingbird",
-      "url": "https://github.com/crvouga-organization/mockingbird",
+      "repo": "crvouga/mockingbird",
+      "url": "https://github.com/crvouga/mockingbird",
       "defaultBranch": "main",
       "stars": 5,
-      "commits": 1445,
-      "openIssues": 2,
-      "openPrs": 2,
+      "commits": 1576,
+      "openIssues": 1,
+      "openPrs": 1,
       "license": null,
       "defaultBranchCiWorkflow": "CI",
       "defaultBranchCiConclusion": "failure",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga-organization/mockingbird/actions/runs/44329525302",
-      "defaultBranchCiCompletedAt": "2026-11-18T15:12:39Z"
+      "defaultBranchCiRunUrl": "https://github.com/crvouga/mockingbird/actions/runs/44888641661",
+      "defaultBranchCiCompletedAt": "2026-11-21T09:31:08Z"
     },
     {
-      "repo": "crvouga-organization/headless-combobox",
-      "url": "https://github.com/crvouga-organization/headless-combobox",
+      "repo": "crvouga/headless-combobox",
+      "url": "https://github.com/crvouga/headless-combobox",
       "defaultBranch": "main",
       "stars": 46,
-      "commits": 344,
+      "commits": 349,
       "openIssues": 0,
       "openPrs": 0,
       "license": null,
       "defaultBranchCiWorkflow": "CD",
       "defaultBranchCiConclusion": "success",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga-organization/headless-combobox/actions/runs/21232438172",
-      "defaultBranchCiCompletedAt": "2026-11-17T07:39:15Z"
+      "defaultBranchCiRunUrl": "https://github.com/crvouga/headless-combobox/actions/runs/44882206654",
+      "defaultBranchCiCompletedAt": "2026-11-21T07:56:03Z"
     },
     {
-      "repo": "crvouga-organization/personal",
-      "url": "https://github.com/crvouga-organization/personal",
+      "repo": "crvouga/personal",
+      "url": "https://github.com/crvouga/personal",
       "defaultBranch": "main",
       "stars": 1,
-      "commits": 2015,
-      "openIssues": 1,
-      "openPrs": 1,
+      "commits": 2030,
+      "openIssues": 3,
+      "openPrs": 3,
       "license": null,
       "defaultBranchCiWorkflow": "CI",
-      "defaultBranchCiConclusion": "success",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga-organization/personal/actions/runs/44530084607",
-      "defaultBranchCiCompletedAt": "2026-11-19T13:15:40Z"
+      "defaultBranchCiConclusion": "cancelled",
+      "defaultBranchCiRunUrl": "https://github.com/crvouga/personal/actions/runs/44888780415",
+      "defaultBranchCiCompletedAt": "2026-11-22T02:17:08Z"
     }
   ],
   "mockingbird": {
-    "commit": "fb11e5457c0cfbf88739809dd51d73fb2df3cc96",
-    "testFiles": 1283,
-    "testCallSites": 5069,
-    "publishedPackages": 130,
+    "commit": "6067396700a7a49b0b2c1e020ed5d20171119dcb",
+    "testFiles": 1346,
+    "testCallSites": 5517,
+    "publishedPackages": 133,
     "emulators": 127,
     "wipEmulators": 16,
     "propertyTestFiles": 126
@@ -85,7 +86,7 @@
     "opsTotal": 1911
   },
   "headlessCombobox": {
-    "commit": "6dc4a1d2b9195fb271730635a5030f534012d6db",
+    "commit": "6be6caa861ba7dfe3aba81c0179fe0119aa4433a",
     "testFiles": 9,
     "testCallSites": 87
   }

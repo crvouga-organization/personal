@@ -16,7 +16,7 @@ export const ARCHIVE_PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/todo-v1',
+      url: 'https://github.com/crvouga/todo-v1',
     },
     description: 'A task manager with user accounts and real-time sync.',
     topics: [
@@ -41,7 +41,7 @@ export const ARCHIVE_PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/connect-four',
+      url: 'https://github.com/crvouga/connect-four',
     },
     description:
       'Connect Four with online multiplayer and a computer opponent.',
@@ -68,7 +68,7 @@ export const ARCHIVE_PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/quiz-maker',
+      url: 'https://github.com/crvouga/quiz-maker',
     },
     description:
       'A quiz builder that plugs into learning management systems, so instructors and students never leave their course.',
@@ -100,7 +100,7 @@ export const ARCHIVE_PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/anime',
+      url: 'https://github.com/crvouga/anime',
     },
     description:
       'A blog built as a fast static site, with content managed separately from the code.',
@@ -125,7 +125,7 @@ export const ARCHIVE_PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/snake',
+      url: 'https://github.com/crvouga/snake',
     },
     description:
       'The classic Snake game, with smooth animation and responsive controls.',
@@ -142,7 +142,7 @@ export const ARCHIVE_PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/match-three',
+      url: 'https://github.com/crvouga/match-three',
     },
     description: 'A match-three puzzle game in the spirit of Candy Crush.',
     topics: ['css', 'javascript', 'ramda', 'react', 'redux', 'redux-saga'],
@@ -158,7 +158,7 @@ export const ARCHIVE_PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/simon-says',
+      url: 'https://github.com/crvouga/simon-says',
     },
     description:
       'The classic Simon Says memory game, with sound, visuals, and rising difficulty.',
@@ -174,7 +174,7 @@ export const ARCHIVE_PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/cheese',
+      url: 'https://github.com/crvouga/cheese',
     },
     description:
       'Generates customizable event ID cards, with all image editing done in the browser.',
@@ -214,7 +214,7 @@ export const ARCHIVE_PROJECT_FACTS: readonly ProjectFact[] = [
     },
     code: {
       t: 'public',
-      url: 'https://github.com/crvouga-organization/pickflix-v1',
+      url: 'https://github.com/crvouga/pickflix-v1',
     },
     description:
       'A social movie-discovery app for watching trailers, writing reviews, and building shared lists with friends.',
