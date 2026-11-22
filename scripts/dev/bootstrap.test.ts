@@ -48,7 +48,10 @@ function bootstrap(installed: string) {
   }
 }
 
-test('bootstrap keeps the pinned mise and any newer one', () => {
+// bootstrap.sh refuses to run on native Windows, which uses bootstrap.ps1.
+const unix = test.skipIf(process.platform === 'win32');
+
+unix('bootstrap keeps the pinned mise and any newer one', () => {
   expect(pinned).toMatch(/^\d+\.\d+\.\d+$/);
   // A fleet machine: dev-fleet installed a newer mise and its global config requires it.
   for (const installed of [pinned!, '2999.1.0', '2026.10.100']) {
@@ -56,7 +59,7 @@ test('bootstrap keeps the pinned mise and any newer one', () => {
   }
 });
 
-test('bootstrap replaces a mise older than the pin', () => {
+unix('bootstrap replaces a mise older than the pin', () => {
   for (const installed of ['2020.12.31', '2026.9.30']) {
     const result = bootstrap(installed);
     expect(result.status).not.toBe(0);
