@@ -3,19 +3,22 @@ name: CLI proxy health
 # (cliproxy/scripts at the revision pinned in fleet.revision), run against this
 # repository's fleet.json; dev-fleet's own CI runs their offline contract tests.
 # Deliberately cheap by default:
-#   every 15 min  readiness: free (no inference) + cloud checkpoint freshness
-#   hourly        light: 2 tiny requests per model (about 200 requests a day)
-#   03:41 nightly comprehensive suite (bounded by models.json budgets)
+#   03:41 daily   comprehensive suite (bounded by models.json budgets) plus the
+#                 free readiness checks (endpoint + cloud checkpoint freshness)
 #   manual        any profile, one model or one check, optional force-probe
+# The former 15-minute readiness and hourly light schedules were removed to cut
+# GitHub Actions run volume (about 450 runs a week). Dispatch `readiness` or
+# `light` manually when needed.
+# TODO: uptime monitoring of the proxy endpoint should move to an external
+# monitor (e.g. UptimeRobot, Better Stack, Grafana synthetic checks) instead of
+# scheduled GitHub Actions runs.
 on:
   schedule:
-    - cron: '7,22,37,52 * * * *'
-    - cron: '17 * * * *'
     - cron: '41 3 * * *'
   workflow_dispatch:
     inputs:
       profile:
-        description: readiness is free; light is the hourly check; nightly is comprehensive; manual adds wrong-key probes and fault simulations.
+        description: readiness is free; light is a cheap spot check; nightly is comprehensive (the daily schedule); manual adds wrong-key probes and fault simulations.
         type: choice
         default: light
         options: [liveness, readiness, light, nightly, manual]
@@ -48,7 +51,7 @@ concurrency:
 env:
   DEVFLEET_CONFIG: ${{ github.workspace }}/fleet.json
   PROXY: dev-fleet/cliproxy/scripts
-  PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || github.event.schedule == '41 3 * * *' && 'nightly' || github.event.schedule == '17 * * * *' && 'light' || 'readiness' }}
+  PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || 'nightly' }}
 jobs:
   health:
     if: github.repository == 'crvouga-organization/personal' && github.ref == 'refs/heads/main'
@@ -71,7 +74,7 @@ jobs:
           path: dev-fleet
           persist-credentials: false
       - name: Install read-only backup client
-        if: env.PROFILE == 'readiness'
+        if: env.PROFILE == 'readiness' || github.event_name == 'schedule'
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends restic
@@ -85,7 +88,9 @@ jobs:
           jwtGithubAudience: https://vault.chrisvouga.dev
           exportToken: true
       - name: Verify endpoint and cloud recovery freshness
-        if: env.PROFILE == 'readiness'
+        # The daily scheduled run also does the free readiness checks, since
+        # the 15-minute readiness schedule is gone.
+        if: env.PROFILE == 'readiness' || github.event_name == 'schedule'
         run: python3 -B "$PROXY/external-health.py"
       - name: Restore last-success and rate-limit state
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0

@@ -1,6 +1,7 @@
 name: Developer toolchain
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - mise.toml
       - mise.lock
@@ -20,6 +21,9 @@ on:
   workflow_dispatch: {}
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   smoke:
     name: Locked tools (${{ matrix.os }})

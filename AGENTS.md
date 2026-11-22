@@ -12,9 +12,9 @@ All code is written by agents and merged by CI; nobody reviews it. CI is the onl
 - Never weaken a check to go green. Fix the code, or add the `needs-human` label and explain why in the PR body.
 - Do not bump dependencies; Dependabot owns that (`deps` label).
 - `needs-human` and `do-not-merge` turn off auto-merge; a human merges or closes the PR.
-- **Failures on `main` become issues.** Any failing job on `main` (CI, Deploy, Maintenance, Developer toolchain, Agent PRs, Drift) opens one issue per job, `<workflow>: <job> failing on main`, labeled `ci-failed` and `ready`, with `file:line`, the repro command, a log excerpt and a JSON block. Fix it like any task and put `Fixes #<n>` in the PR body; the issue also closes itself when that job next passes on `main` (`.github/workflows/failure-issues.yml`).
+- **Failures on `main` become issues.** Any failing job on `main` (CI, Deploy, Maintenance) opens one issue per job, `<workflow>: <job> failing on main`, labeled `ci-failed` and `ready`, with `file:line`, the repro command, a log excerpt and a JSON block. Fix it like any task and put `Fixes #<n>` in the PR body; the issue also closes itself when that job next passes on `main` (the `failure_issues` job at the end of those workflows; Drift keeps its own `drift` issue).
 - **When CI fails**, read the PR's sticky "CI report" comment: each failure lists `file:line`, a `Reproduce:` command and a JSON block (`failures[].job`, `.command`, `.locations`). Reproduce locally, fix, push. After 3 failing commits the PR is labeled `needs-human`.
-- Idle agent PRs are labeled `stale` after 2 days and closed after 5. Branches behind `main` are updated hourly; a conflict labels `needs-human` and lists the files.
+- Idle agent PRs are labeled `stale` after 2 days and closed after 5. Branches behind `main` are updated weekly; a conflict labels `needs-human` and lists the files.
 
 ## Single CLI ownership
 

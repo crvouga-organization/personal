@@ -82,4 +82,4 @@ stay in CI and Deploy; thread environments must not load `secret/personal/prd`.
 GitHub-hosted runners cannot reach T3 Code. The hourly T3 scheduled task "Resume agent PRs with
 failing CI" (project `personal`, stored in T3, not this repo) reads failing agent PRs' "CI
 report" comments and sends the failure to the thread linked to the PR, once per commit; after
-three failing commits `ci-report.yml` labels the PR `needs-human`.
+three failing commits CI's `pr_report` job labels the PR `needs-human`.

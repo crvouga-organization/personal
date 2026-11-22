@@ -2,7 +2,8 @@ name: Deploy
 on:
   workflow_call: {}
   schedule:
-    - cron: 0 13 * * *
+    # Daily portfolio rebuild; off the top of the hour to spread load.
+    - cron: 11 13 * * *
   repository_dispatch:
     types:
       - deploy-service
@@ -227,3 +228,40 @@ jobs:
         env:
           VAULT_ADDR: https://vault.chrisvouga.dev
         run: bun run --cwd packages/zoomies configure
+  # Folded in from the former failure-issues.yml (workflow_run after every run): files one
+  # `ci-failed` + `ready` issue per failing job on main and closes it when the job passes again.
+  # Direct runs only; when CI calls this workflow, CI's own job reports.
+  failure_issues:
+    name: Open or close failure issues
+    if: "!cancelled() && github.event_name != 'push' && github.ref == 'refs/heads/main' &&
+      github.repository == 'crvouga-organization/personal'"
+    needs: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # contents: read only: CI calls this workflow via workflow_call with narrow
+    # permissions, and a nested job may not request more than the caller
+    # grants (even when skipped). Issue/comment writes use the DEPLOY_DISPATCH_TOKEN PAT.
+    permissions:
+      contents: read
+    concurrency:
+      group: failure-issues
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.4
+      - name: Download failure summaries
+        if: contains(needs.*.result, 'failure')
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_DISPATCH_TOKEN }}
+        run: gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -p 'ci-summary-*' -D summaries || echo "No failure summaries"
+      - name: Open or close issues
+        env:
+          GH_TOKEN: ${{ secrets.DEPLOY_DISPATCH_TOKEN }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW: ${{ github.workflow }}
+          HEAD_SHA: ${{ github.sha }}
+          SUMMARIES: summaries
+        run: bun scripts/ci/failure-issues.ts

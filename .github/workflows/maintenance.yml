@@ -1,9 +1,13 @@
 name: Maintenance
 on:
   schedule:
+    # Daily health + portfolio links. Uptime monitoring should move to an
+    # external monitor rather than scheduled GitHub Actions runs.
     - cron: 30 15 * * *
-    - cron: 0 13 * * *
-    - cron: 0 14 * * 1
+    # Daily GitHub snapshot refresh.
+    - cron: 13 13 * * *
+    # Weekly dependency update (Mondays).
+    - cron: 19 14 * * 1
   workflow_dispatch:
     inputs:
       task:
@@ -274,7 +278,7 @@ jobs:
           task="$TASK"
 
           if [ -z "$task" ]; then
-            if [ "$SCHEDULE" = "0 14 * * 1" ]; then task=dependencies; else task=snapshot; fi
+            if [ "$SCHEDULE" = "19 14 * * 1" ]; then task=dependencies; else task=snapshot; fi
           fi
 
           echo "task=$task" >> "$GITHUB_OUTPUT"
@@ -430,3 +434,37 @@ jobs:
           fi
 
           bun run vault:fix "${args[@]}"
+  # Folded in from the former failure-issues.yml (workflow_run after every run): files one
+  # `ci-failed` + `ready` issue per failing job on main and closes it when the job passes again.
+  failure_issues:
+    name: Open or close failure issues
+    if: "!cancelled() && github.ref == 'refs/heads/main'"
+    needs: [storage-metadata, deployment-logs, health, links, update, repair]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+    concurrency:
+      group: failure-issues
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.4
+      - name: Download failure summaries
+        if: contains(needs.*.result, 'failure')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download "$GITHUB_RUN_ID" -R "$GITHUB_REPOSITORY" -p 'ci-summary-*' -D summaries || echo "No failure summaries"
+      - name: Open or close issues
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW: ${{ github.workflow }}
+          HEAD_SHA: ${{ github.sha }}
+          SUMMARIES: summaries
+        run: bun scripts/ci/failure-issues.ts
