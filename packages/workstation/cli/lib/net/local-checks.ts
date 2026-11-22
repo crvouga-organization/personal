@@ -9,6 +9,7 @@ import { diskCheck } from '@crvouga/dev-fleet/src/machine-health';
 import { findOnPath } from './run';
 import { fetchT3Environment, LOCAL_T3_ORIGIN } from './t3';
 import type { TailscaleStatus } from './tailscale';
+import { vscodeCliBinaries } from './vscode';
 
 type Check = DoctorCheck;
 
@@ -102,7 +103,10 @@ export function vscodeChecks(platform: Platform): Check[] {
           "Install 'Remote - SSH' in VS Code."
         ),
   ];
-  if (findOnPath('code') === null && platform.vscodeCliBinaries().length > 0) {
+  if (
+    findOnPath('code') === null &&
+    vscodeCliBinaries(platform.name).length > 0
+  ) {
     checks.push(
       warnCheck(
         'vscode-cli',
