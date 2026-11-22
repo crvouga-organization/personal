@@ -4,7 +4,8 @@ name: Drift
 # PR branch to preview that branch's GitHub changes before merging.
 on:
   schedule:
-    - cron: '17 12 * * *'
+    # Weekly (Wednesdays); was daily. Dispatch manually for an immediate check.
+    - cron: '17 12 * * 3'
   workflow_dispatch: {}
 permissions:
   contents: read
