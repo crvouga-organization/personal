@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { requiredMoveTargets } from './deploy-preflight';
+import { rateLimitWait, requiredMoveTargets } from './deploy-preflight';
 
 const moved = {
   severity: 'error',
@@ -122,3 +122,21 @@ exit 0
       rmSync(directory, { recursive: true, force: true });
     }
   });
+
+test('preflight waits only when every error is the Railway API quota', () => {
+  const diagnostic = (detail: string) =>
+    JSON.stringify({
+      type: 'diagnostic',
+      diagnostic: { severity: 'error', summary: 'Client Error', detail },
+    });
+  const quota = (seconds: number) =>
+    diagnostic(
+      `Unable to read project, got error: returned error 429 Too Many Requests: Rate limit exceeded, please try again in ${seconds}.5 seconds.`
+    );
+  expect(rateLimitWait([quota(652), quota(100)].join('\n'))).toBe(668);
+  expect(
+    rateLimitWait([quota(652), diagnostic('project Not Authorized')].join('\n'))
+  ).toBeNull();
+  expect(rateLimitWait('')).toBeNull();
+  expect(rateLimitWait('not json')).toBeNull();
+});

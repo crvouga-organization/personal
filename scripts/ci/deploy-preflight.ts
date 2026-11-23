@@ -1,5 +1,34 @@
 /** Read-only OpenTofu credential probe, including any pending resource moves. */
 import { appendFileSync } from 'node:fs';
+import {
+  railwayRetrySeconds,
+  railwayWaitBudgetSeconds,
+  RESET_MARGIN_SECONDS,
+} from '../../packages/infra/lib/railway-rate-limit';
+
+/** Seconds to wait when every error is Railway's API quota; null otherwise. */
+export function rateLimitWait(output: string): number | null {
+  try {
+    const errors = output
+      .split('\n')
+      .filter((line) => line.trim())
+      .map((line) => JSON.parse(line))
+      .filter(
+        (event) =>
+          event.type === 'diagnostic' && event.diagnostic?.severity === 'error'
+      )
+      .map((event) =>
+        railwayRetrySeconds(
+          `${event.diagnostic.summary} ${event.diagnostic.detail}`
+        )
+      );
+    if (errors.length === 0 || errors.some((seconds) => seconds === null))
+      return null;
+    return Math.max(...(errors as number[])) + RESET_MARGIN_SECONDS;
+  } catch {
+    return null;
+  }
+}
 
 export function requiredMoveTargets(output: string): string[] | null {
   try {
@@ -35,11 +64,15 @@ export function requiredMoveTargets(output: string): string[] | null {
 }
 
 export function checkDeploymentCredentials(
-  root = 'packages/infra/tofu/foundation'
+  root = 'packages/infra/tofu/foundation',
+  sleep: (milliseconds: number) => void = Bun.sleepSync,
+  rateLimitBudget = railwayWaitBudgetSeconds()
 ): number {
   const targets = ['railway_project.workspace'];
+  let budget = rateLimitBudget;
   // OpenTofu lists all excluded move endpoints in its diagnostic. Include those
-  // once; do not retry authorization, configuration or mixed failures.
+  // once; do not retry authorization, configuration or mixed failures. Waiting
+  // out Railway's hourly API quota does not use up an attempt.
   for (let attempt = 0; attempt < 2; attempt++) {
     const result = Bun.spawnSync(
       [
@@ -58,6 +91,16 @@ export function checkDeploymentCredentials(
     const output = result.stdout.toString();
     console.log(output);
     if (result.exitCode === 0) return 0;
+    const wait = rateLimitWait(output);
+    if (wait !== null && wait <= budget) {
+      budget -= wait;
+      console.log(
+        `Railway API rate limit reached; waiting ${wait}s for the quota window to reset.`
+      );
+      sleep(wait * 1000);
+      attempt--;
+      continue;
+    }
     const required = requiredMoveTargets(output);
     const additional = required?.filter((target) => !targets.includes(target));
     if (attempt === 1 || !additional?.length) return result.exitCode || 1;

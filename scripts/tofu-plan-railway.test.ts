@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { retryDelay } from './tofu-plan';
+import { planWithRetry, retryDelay } from './tofu-plan';
 
 const railway = {
   severity: 'error',
@@ -134,3 +134,63 @@ test.each([[slots, atlas], [atlasTimeout]])(
     }
   }
 );
+
+// Recorded from Deploy run 45083227712 (services root, 2026-11-22).
+const quota = (
+  seconds: string,
+  address = 'module.service["docs"].railway_service.this'
+) => ({
+  severity: 'error',
+  summary: 'Client Error',
+  address,
+  detail: `Unable to read service settings, got error: returned error 429 Too Many Requests: Rate limit exceeded, please try again in ${seconds} seconds.`,
+});
+
+test('Railway API quota waits for the window to reset within the budget', () => {
+  expect(retryDelay(failure([quota('1793.711')]), 0, 3900)).toBe(1809_000);
+  expect(
+    retryDelay(
+      failure([quota('652.303'), quota('981.98', 'railway_project.workspace')]),
+      0,
+      3900
+    )
+  ).toBe(997_000);
+  // Without a budget (interactive runs) a long quota wait fails fast.
+  expect(retryDelay(failure([quota('1793.711')]), 0)).toBeNull();
+  expect(retryDelay(failure([quota('1793.711')]), 0, 600)).toBeNull();
+  // A short quota wait fits the ordinary cap.
+  expect(retryDelay(failure([quota('30')]), 0)).toBe(45_000);
+});
+
+test('Railway API quota mixed with any other failure fails immediately', () => {
+  expect(retryDelay(failure([quota('60'), railway]), 0, 3900)).toBeNull();
+  expect(retryDelay(failure([quota('60'), project]), 0, 3900)).toBeNull();
+});
+
+test('a plan interrupted by the Railway quota waits once and succeeds', async () => {
+  const waits: number[] = [];
+  let calls = 0;
+  const code = await planWithRetry(
+    mkdtempSync(join(tmpdir(), 'tofu-quota-')),
+    async () =>
+      ++calls === 1
+        ? failure([quota('1200')])
+        : { code: 0, valid: true, errors: [] },
+    async (ms) => waits.push(ms),
+    3900
+  );
+  expect(code).toBe(0);
+  expect(waits).toEqual([1215_000]);
+});
+
+test('Railway quota waits share one budget across replans', async () => {
+  const waits: number[] = [];
+  const code = await planWithRetry(
+    mkdtempSync(join(tmpdir(), 'tofu-quota-')),
+    async () => failure([quota('2000')]),
+    async (ms) => waits.push(ms),
+    3900
+  );
+  expect(code).toBe(1);
+  expect(waits).toEqual([2015_000]);
+});

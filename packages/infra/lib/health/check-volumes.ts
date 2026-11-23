@@ -2,6 +2,7 @@
 import type { ServiceSpec } from '../schema.js';
 import type { HealthContext } from './context.js';
 import { fail, pass, skip, type CheckResult } from './report.js';
+import { railwayRequest, railwayWaitBudgetSeconds } from '../railway-rate-limit.js';
 
 export const volumeQuery = `query VolumeWriter($serviceId: String!, $environmentId: String!) {
   serviceInstance(serviceId: $serviceId, environmentId: $environmentId) {
@@ -70,13 +71,13 @@ async function check(
   const name = `volume writer ${service.id}`;
   const { serviceId, environmentId, token } = target;
   try {
-    const request = ctx.fetch;
+    const request = railwayRequest({ request: ctx.fetch, budgetSeconds: railwayWaitBudgetSeconds(ctx.env) });
     const response = await request('https://backboard.railway.app/graphql/v2', {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ query: volumeQuery, variables: { serviceId, environmentId } }),
       signal: AbortSignal.timeout(ctx.options.timeoutMs),
-    });
+    }, ctx.options.timeoutMs);
     if ([401, 403].includes(response.status)) return skip(name, 'Railway credential cannot read volume/deployment settings');
     if (!response.ok) return fail(name, `Railway read failed (HTTP ${response.status})`);
     const result = await response.json() as { data?: Observation; errors?: unknown[] };
