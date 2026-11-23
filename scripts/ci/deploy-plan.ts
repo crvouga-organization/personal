@@ -18,6 +18,69 @@ type Request = {
   recoverVault?: boolean;
 };
 
+export type DeployRun = {
+  id: number;
+  event: string;
+  status: string;
+  conclusion: string | null;
+  display_title: string;
+  created_at: string;
+};
+
+const TAG = '[\\w][\\w.-]{0,127}';
+const DISPATCH_TITLE = new RegExp(`^deploy-service ([\\w.-]+)@(${TAG})$`);
+const MANUAL_TITLE = new RegExp(`^deploy ([\\w.-]+)@(${TAG})$`);
+const WAITING = ['queued', 'pending', 'waiting', 'requested'];
+
+/**
+ * Image revisions requested by deploy-service dispatches that never ran.
+ * GitHub keeps one pending run per concurrency group and cancels the older
+ * pending run when another request arrives, so a burst of dispatches for
+ * different services would otherwise drop all but the last. Each run's name
+ * records its request (see run-name in deploy.yml); for every service the
+ * newest request wins, and it is recovered only when it was a dispatch that
+ * was cancelled or is still waiting. A newer manual deployment of the service,
+ * or a dispatch that ran (successfully or not), is never overridden.
+ */
+export function lostRequests(
+  runs: readonly DeployRun[],
+  serviceIds: readonly string[],
+  currentRunId: number
+): Record<string, string> {
+  const newest = new Map<
+    string,
+    { run: DeployRun; tag: string; dispatch: boolean }
+  >();
+  const ordered = [...runs].sort((a, b) =>
+    b.created_at.localeCompare(a.created_at)
+  );
+  for (const run of ordered) {
+    const dispatch =
+      run.event === 'repository_dispatch'
+        ? DISPATCH_TITLE.exec(run.display_title)
+        : null;
+    const manual =
+      run.event === 'workflow_dispatch'
+        ? MANUAL_TITLE.exec(run.display_title)
+        : null;
+    const match = dispatch ?? manual;
+    if (!match) continue;
+    const ids = match[1] === 'all' && manual ? serviceIds : [match[1]];
+    for (const id of ids)
+      if (serviceIds.includes(id) && !newest.has(id))
+        newest.set(id, { run, tag: match[2], dispatch: !!dispatch });
+  }
+  const lost: Record<string, string> = {};
+  for (const [id, { run, tag, dispatch }] of newest)
+    if (
+      dispatch &&
+      run.id !== currentRunId &&
+      (run.conclusion === 'cancelled' || WAITING.includes(run.status))
+    )
+      lost[id] = tag;
+  return lost;
+}
+
 export function deploymentPlan(config: InfraConfig, request: Request) {
   const { event, action, paths, sha } = request;
   if (
@@ -81,6 +144,10 @@ export function deploymentPlan(config: InfraConfig, request: Request) {
     throw new Error('Invalid image tag');
   return {
     apply,
+    // A service deployment request only rolls an image: the platform roots
+    // (foundation, bootstrap, vault) change through main. Skipping them keeps
+    // each request from reading every Railway resource again.
+    platform: apply && event !== 'repository_dispatch',
     build,
     vault,
     auth,
@@ -93,6 +160,28 @@ export function deploymentPlan(config: InfraConfig, request: Request) {
     image_tag: imageTag,
     smoke: action !== 'auth' || auth,
   };
+}
+
+/** Recent Deploy runs; recovery is best effort and never blocks a deployment. */
+async function deployRuns(): Promise<DeployRun[]> {
+  try {
+    const output = execFileSync(
+      'gh',
+      [
+        'api',
+        `repos/${process.env.GITHUB_REPOSITORY}/actions/workflows/deploy.yml/runs?per_page=100`,
+        '--jq',
+        '[.workflow_runs[] | {id, event, status, conclusion, display_title, created_at}]',
+      ],
+      { encoding: 'utf8', timeout: 30_000 }
+    );
+    return JSON.parse(output);
+  } catch (error) {
+    console.log(
+      `::warning title=Deployment recovery skipped::Could not list Deploy runs to recover cancelled requests: ${(error as Error).message.split('\n')[0]}`
+    );
+    return [];
+  }
 }
 
 if (import.meta.main) {
@@ -144,7 +233,29 @@ if (import.meta.main) {
         ? process.env.CLIENT_TAG
         : process.env.INPUT_TAG,
   });
-  for (const [key, value] of Object.entries(plan))
+  const imageTags: Record<string, string> = Object.fromEntries(
+    plan.image_tag ? plan.service_ids.map((id) => [id, plan.image_tag]) : []
+  );
+  if (plan.services) {
+    const config = loadServicesConfig();
+    const external = deployableServices(config)
+      .filter((service) => service.github_repo !== infraGithubRepo(config))
+      .map((service) => service.id);
+    for (const [id, tag] of Object.entries(
+      lostRequests(
+        await deployRuns(),
+        external,
+        Number(process.env.GITHUB_RUN_ID)
+      )
+    ))
+      if (!plan.service_ids.includes(id)) {
+        console.log(`Recovering cancelled deployment request: ${id}@${tag}`);
+        plan.service_ids.push(id);
+        imageTags[id] = tag;
+      }
+  }
+  const outputs = { ...plan, image_tags: JSON.stringify(imageTags) };
+  for (const [key, value] of Object.entries(outputs))
     appendFileSync(
       process.env.GITHUB_OUTPUT!,
       `${key}=${Array.isArray(value) ? JSON.stringify(value) : value}\n`

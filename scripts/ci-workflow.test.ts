@@ -72,7 +72,8 @@ test('deployment requires successful checks on a main push and cannot cancel act
   expect(index('Smoke test')).toBe(-1);
   const probe = steps[index('Check deployment credentials')];
   expect(probe.run).toBe('bun scripts/ci/deploy-preflight.ts');
-  expect(probe['timeout-minutes']).toBe(2);
+  // Room to wait out Railway's hourly API quota.
+  expect(probe['timeout-minutes']).toBe(70);
   expect(probe.if).toBe("steps.plan.outputs.apply == 'true'");
   expect(
     steps.some(

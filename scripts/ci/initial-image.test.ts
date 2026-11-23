@@ -21,7 +21,11 @@ const step = action.runs.steps.find(
     candidate.name === 'Preserve deployed image revisions'
 );
 
-function preserve(selected: string[] = [], tag = ''): unknown {
+function preserve(
+  selected: string[] = [],
+  tag = '',
+  tags?: Record<string, string>
+): unknown {
   const directory = mkdtempSync(join(tmpdir(), 'initial-image-'));
   const inventory = join(directory, 'packages/infra/tofu/modules/inventory');
   mkdirSync(inventory, { recursive: true });
@@ -60,6 +64,7 @@ function preserve(selected: string[] = [], tag = ''): unknown {
         TOFU_ROOT: 'services',
         SERVICE_IDS: JSON.stringify(selected),
         IMAGE_TAG: tag,
+        ...(tags ? { IMAGE_TAGS: JSON.stringify(tags) } : {}),
         GITHUB_ENV: output,
       },
     });
@@ -83,6 +88,16 @@ test('first activation uses the reviewed image while preserving existing release
 test('later publisher dispatch replaces only the selected release', () => {
   expect(preserve(['new-app'], 'next-commit')).toEqual({
     existing: 'live-commit',
+    'new-app': 'next-commit',
+    'legacy-default': 'latest',
+  });
+});
+
+test('one run rolls every recovered request at its own revision', () => {
+  expect(
+    preserve(['new-app', 'existing'], 'next-commit', { existing: 'recovered' })
+  ).toEqual({
+    existing: 'recovered',
     'new-app': 'next-commit',
     'legacy-default': 'latest',
   });

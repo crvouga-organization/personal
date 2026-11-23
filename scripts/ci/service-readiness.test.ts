@@ -276,3 +276,26 @@ test('failed rollout includes the deployment runtime log tail', async () => {
     })
   ).rejects.toThrow('dep listen EADDRINUSE');
 });
+
+test('time spent waiting out the Railway API quota does not count against the rollout deadline', async () => {
+  let time = 0;
+  let attempts = 0;
+  await waitForService(
+    target,
+    async () => {
+      attempts++;
+      // The first read waited 30 minutes for the quota window to reset.
+      if (attempts === 1) time += 1_800_000;
+      return observation(attempts < 3 ? 'DEPLOYING' : 'SUCCESS');
+    },
+    {
+      now: () => time,
+      sleep: async (ms: number) => {
+        time += ms;
+      },
+      report: () => {},
+      timeoutMs: 60_000,
+    }
+  );
+  expect(attempts).toBe(3);
+});

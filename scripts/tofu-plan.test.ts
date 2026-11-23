@@ -252,7 +252,7 @@ test('a permanent error fails on the first attempt with its exit status', async 
   }
 });
 
-test('shared action reviews the successful plan and applies it exactly once', () => {
+test('shared action reviews the successful plan and applies it through the quota-aware apply', () => {
   const action = parse(
     readFileSync(
       join(import.meta.dirname, '../.github/actions/tofu/action.yml'),
@@ -264,9 +264,7 @@ test('shared action reviews the successful plan and applies it exactly once', ()
   expect(plan.run).toContain('bun scripts/tofu-plan.ts\n');
   expect(plan.run).toContain('show -no-color apply.tfplan');
   const apply = steps.find((step: { name?: string }) => step.name === 'Apply');
-  expect(apply.run).toBe(
-    'tofu -chdir="packages/infra/tofu/${TOFU_ROOT}" apply -input=false -lock-timeout=15m -parallelism=1 apply.tfplan'
-  );
+  expect(apply.run).toContain('bun scripts/tofu-apply.ts');
   const workflow = parse(
     readFileSync(
       join(import.meta.dirname, '../.github/actions/deploy-auth/action.yml'),

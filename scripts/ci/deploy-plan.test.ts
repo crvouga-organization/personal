@@ -1,5 +1,5 @@
 import { expect, test } from 'bun:test';
-import { deploymentPlan } from './deploy-plan';
+import { deploymentPlan, lostRequests, type DeployRun } from './deploy-plan';
 import {
   loadServicesConfig,
   deployableServices,
@@ -90,10 +90,77 @@ test('dispatch selects exactly the requested managed service and revision', () =
     })
   ).toMatchObject({
     build: false,
+    platform: false,
     service_ids: [local[0]!.id],
     image_tag: 'revision-42',
     services: true,
   });
+});
+
+test('only service dispatches skip the platform roots', () => {
+  expect(
+    deploymentPlan(config, { ...request, action: 'deploy' }).platform
+  ).toBe(true);
+  expect(
+    deploymentPlan(config, {
+      ...request,
+      paths: ['packages/infra/tofu/services/main.tf'],
+    }).platform
+  ).toBe(true);
+});
+
+const run = (
+  id: number,
+  display_title: string,
+  conclusion: string | null,
+  event = 'repository_dispatch',
+  status = 'completed'
+): DeployRun => ({
+  id,
+  event,
+  status,
+  conclusion,
+  display_title,
+  created_at: `2026-11-22T10:${String(id).padStart(2, '0')}:00Z`,
+});
+
+test('recovers the newest request of each service whose pending run GitHub cancelled', () => {
+  const runs = [
+    run(1, 'deploy-service docs@old', 'cancelled'),
+    run(2, 'deploy-service docs@new', 'cancelled'),
+    run(3, 'deploy-service api@a1', 'cancelled'),
+    run(4, 'deploy-service web@w1', null, 'repository_dispatch', 'queued'),
+    run(
+      5,
+      'deploy-service current@c1',
+      null,
+      'repository_dispatch',
+      'in_progress'
+    ),
+  ];
+  expect(lostRequests(runs, ['docs', 'api', 'web', 'current'], 5)).toEqual({
+    docs: 'new',
+    api: 'a1',
+    web: 'w1',
+  });
+});
+
+test('never overrides a request that ran or a newer manual deployment', () => {
+  const runs = [
+    run(1, 'deploy-service ran@r0', 'cancelled'),
+    run(2, 'deploy-service ran@r1', 'success'),
+    run(3, 'deploy-service broken@b1', 'failure'),
+    run(4, 'deploy-service manual@m1', 'cancelled'),
+    run(5, 'deploy manual@pinned', 'success', 'workflow_dispatch'),
+    run(6, 'deploy-service all-manual@x', 'cancelled'),
+    run(7, 'deploy all@latest', 'success', 'workflow_dispatch'),
+    run(8, 'deploy-service unknown@u1', 'cancelled'),
+    run(9, 'deploy-service', 'cancelled'),
+    run(10, 'deploy-service bad@tag with space', 'cancelled'),
+  ];
+  expect(
+    lostRequests(runs, ['ran', 'broken', 'manual', 'all-manual', 'bad'], 99)
+  ).toEqual({});
 });
 
 test('malformed dispatches cannot redeploy every service or accept arbitrary tags', () => {

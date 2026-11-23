@@ -10,6 +10,7 @@ import {
   readDeployment,
   type Rollout,
 } from '../../packages/infra/lib/railway-deployments';
+import { railwayRequest } from '../../packages/infra/lib/railway-rate-limit';
 import {
   deployableServices,
   loadServicesConfig,
@@ -55,6 +56,11 @@ export function rolloutState(
     : 'pending';
 }
 
+// Every poll is a Railway API request against an hourly quota shared with
+// OpenTofu; rollouts take minutes, so a 10s interval loses nothing.
+export const POLL_INTERVAL_MS = 10_000;
+const RATE_LIMIT_WAIT_MS = 30_000;
+
 export async function waitForService(
   target: Target,
   observe: () => Promise<Rollout>,
@@ -69,9 +75,14 @@ export async function waitForService(
   const now = options.now ?? Date.now;
   const sleep = options.sleep ?? Bun.sleep;
   const report = options.report ?? console.log;
-  const deadline = now() + (options.timeoutMs ?? 900_000);
+  let deadline = now() + (options.timeoutMs ?? 900_000);
   for (let attempt = 0; attempt < 180 && now() < deadline; attempt++) {
+    const started = now();
     const rollout = await observe();
+    // A read that waited out the Railway API quota says nothing about the
+    // rollout; that time does not count against the rollout deadline.
+    const waited = now() - started;
+    if (waited > RATE_LIMIT_WAIT_MS) deadline += waited;
     const state = rolloutState(target, rollout);
     const status = rollout.latest?.status ?? 'not created';
     report(
@@ -87,7 +98,7 @@ export async function waitForService(
             : '')
       );
     }
-    await sleep(5000);
+    await sleep(POLL_INTERVAL_MS);
   }
   throw new Error(
     `${target.name}: timed out waiting for the selected image to become active`
@@ -151,6 +162,8 @@ export function rolloutTargets(
 async function main() {
   const token = process.env.RAILWAY_TOKEN;
   if (!token) throw new Error('Missing RAILWAY_TOKEN for rollout verification');
+  // One quota budget for every service: they share Railway's hourly window.
+  const railway = railwayRequest();
   const environmentId = output<string>('foundation', 'environment_id');
   const targets = rolloutTargets({
     selected: JSON.parse(process.env.SERVICE_IDS ?? '[]'),
@@ -168,10 +181,13 @@ async function main() {
       waitForService(
         target,
         () =>
-          readDeployment({ serviceId: target.serviceId, environmentId, token }),
+          readDeployment(
+            { serviceId: target.serviceId, environmentId, token },
+            railway
+          ),
         {
           logTail: (deploymentId) =>
-            readDeploymentLogTail({ deploymentId, token }),
+            readDeploymentLogTail({ deploymentId, token }, railway),
         }
       )
     )

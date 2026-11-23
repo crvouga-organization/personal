@@ -16,6 +16,9 @@ inputs:
   image_tag:
     default: ''
     description: Image revision for service_ids; empty preserves all revisions.
+  image_tags:
+    default: '{}'
+    description: JSON object of service id to image revision, applied after image_tag; lets one run roll several requested revisions.
   mode:
     default: apply
     description: apply plans and applies; prepare only initializes and resolves inputs, for read-only drift checks.
@@ -94,6 +97,7 @@ runs:
         VAULT_IMAGE_TAG: ${{ inputs.vault_image_tag }}
         SERVICE_IDS: ${{ inputs.service_ids }}
         IMAGE_TAG: ${{ inputs.image_tag }}
+        IMAGE_TAGS: ${{ inputs.image_tags }}
       run: |
         set -euo pipefail
         ROOT="packages/infra/tofu/${TOFU_ROOT}"
@@ -105,12 +109,13 @@ runs:
           tofu -chdir="${ROOT}" output -json image_tags > /tmp/tofu-image-tags.json
           # A service added to the inventory has no output yet (nothing is deployed
           # to preserve): use its reviewed initial revision, or the legacy default.
-          jq -c --argjson ids "${SERVICE_IDS}" --arg tag "${IMAGE_TAG}" \
+          jq -c --argjson ids "${SERVICE_IDS}" --arg tag "${IMAGE_TAG}" --argjson tags "${IMAGE_TAGS:-"{}"}" \
             --slurpfile inventory packages/infra/tofu/modules/inventory/inventory.tf.json \
             '$inventory[0].locals.inventory as $inv
              | reduce ($inv.services[] | select((.kind // "railway") == "railway" and ((.standalone // false) | not))) as $service
                  (. ; $service.id as $id | if has($id) then . else .[$id] = ($service.initial_image_tag // $inv.default_image_tag) end)
-             | if $tag == "" then . else reduce $ids[] as $id (. ; .[$id] = $tag) end' \
+             | if $tag == "" then . else reduce $ids[] as $id (. ; .[$id] = $tag) end
+             | . + $tags' \
             /tmp/tofu-image-tags.json > /tmp/tofu-next-tags.json
           echo "TF_VAR_image_tags=$(cat /tmp/tofu-next-tags.json)" >> "$GITHUB_ENV"
         fi
@@ -232,4 +237,6 @@ runs:
       shell: bash
       env:
         TOFU_ROOT: ${{ inputs.root }}
-      run: tofu -chdir="packages/infra/tofu/${TOFU_ROOT}" apply -input=false -lock-timeout=15m -parallelism=1 apply.tfplan
+      # Applies the reviewed saved plan; see scripts/tofu-apply.ts for the one
+      # retry it allows (Railway's API quota, services root, fresh plan).
+      run: bun scripts/tofu-apply.ts

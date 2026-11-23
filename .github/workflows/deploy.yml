@@ -1,4 +1,10 @@
 name: Deploy
+# The run name records each deployment request so a later run can recover a
+# request whose pending run GitHub cancelled (scripts/ci/deploy-plan.ts).
+run-name: ${{ github.event_name == 'repository_dispatch' && format('deploy-service {0}@{1}',
+  github.event.client_payload.id, github.event.client_payload.image_tag) ||
+  github.event_name == 'workflow_dispatch' && format('{0} {1}@{2}', inputs.action,
+  inputs.service_id || 'all', inputs.image_tag || 'latest') || 'Deploy' }}
 on:
   workflow_call: {}
   schedule:
@@ -39,7 +45,8 @@ jobs:
     name: Deploy
     if: github.repository == 'crvouga/personal' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    # Room to wait out Railway's hourly API quota (RAILWAY_RATE_LIMIT_WAIT_SECONDS).
+    timeout-minutes: 240
     concurrency:
       group: production
       cancel-in-progress: false
@@ -65,6 +72,8 @@ jobs:
       TOFU_VAULT_INPUTS: ${{ secrets.TOFU_VAULT_INPUTS }}
       TOFU_MIGRATION_READY: ${{ vars.TOFU_MIGRATION_READY }}
       TF_VAR_freeze: ${{ vars.FREEZE == 'true' }}
+      # Railway's API quota resets hourly; waiting it out beats failing the deploy.
+      RAILWAY_RATE_LIMIT_WAIT_SECONDS: 3900
       VAULT_HOSTNAME: vault.chrisvouga.dev
       RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
       DB_CONNECTION_URI: ${{ secrets.DB_CONNECTION_URI }}
@@ -109,7 +118,7 @@ jobs:
           mode: prepare
       - name: Check deployment credentials
         if: steps.plan.outputs.apply == 'true'
-        timeout-minutes: 2
+        timeout-minutes: 70
         run: bun scripts/ci/deploy-preflight.ts
       - name: Set up Docker
         if: steps.plan.outputs.build == 'true' || steps.plan.outputs.vault == 'true' ||
@@ -145,13 +154,13 @@ jobs:
             ghcr.io/crvouga/chrisvouga-vault:${{ github.sha }}
       - name: Apply foundation
         id: foundation
-        if: steps.plan.outputs.apply == 'true'
+        if: steps.plan.outputs.platform == 'true'
         uses: ./.github/actions/tofu
         with:
           root: foundation
           vault_image_tag: ${{ steps.plan.outputs.vault == 'true' && github.sha || '' }}
       - name: Apply bootstrap
-        if: steps.plan.outputs.apply == 'true'
+        if: steps.plan.outputs.platform == 'true'
         uses: ./.github/actions/tofu
         with:
           root: bootstrap
@@ -161,7 +170,7 @@ jobs:
         with:
           foundation_changes: ${{ steps.foundation.outputs.changed_resources }}
       - name: Apply vault
-        if: steps.plan.outputs.apply == 'true' && steps.plan.outputs.auth != 'true'
+        if: steps.plan.outputs.platform == 'true' && steps.plan.outputs.auth != 'true'
         uses: ./.github/actions/tofu
         with:
           root: vault
@@ -195,9 +204,10 @@ jobs:
           root: services
           service_ids: ${{ steps.plan.outputs.service_ids }}
           image_tag: ${{ steps.plan.outputs.image_tag }}
+          image_tags: ${{ steps.plan.outputs.image_tags }}
       - name: Verify active service deployments
         if: steps.plan.outputs.services == 'true'
-        timeout-minutes: 17
+        timeout-minutes: 85
         env:
           SERVICE_IDS: ${{ steps.plan.outputs.service_ids }}
           ROLLOUT_CHANGES: ${{ steps.services.outputs.changed_resources }}
