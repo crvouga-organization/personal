@@ -471,7 +471,12 @@ defect or a missing feature is an issue at
 https://github.com/crvouga/dev-fleet/issues, without credentials, hostnames,
 accounts, domains or `fleet.json` contents.
 
-Change fleet behaviour in dev-fleet, then bump `fleet.revision`. Change machines,
+This repository always runs the latest dev-fleet: `fleet.revision` is dev-fleet's
+head and `@crvouga/dev-fleet` its npm `latest`. The dev-fleet latest workflow
+moves both hourly and auto-merges; `bun run fleet:latest` does it locally. Never
+pin an older dev-fleet.
+
+Change fleet behaviour in dev-fleet; the pins pick it up. Change machines,
 endpoints or secret locations in `fleet.json`. The proxy runs only on the fleet
 manager; it is not a hosted app and is never deployed to Railway. The cloud pieces
 it uses (its Cloudflare tunnel hostname, its Vault keys and the encrypted R2 backup
