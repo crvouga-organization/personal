@@ -27,6 +27,10 @@
       }
     }
   },
+  "git": {
+    "name": "Chris Vouga",
+    "email": "49178412+crvouga@users.noreply.github.com"
+  },
   "manager": {
     "id": "chriss-macbook-air",
     "os": "macOS",
@@ -90,6 +94,12 @@
     "agentProfile": "proxy",
     "unattendedSudo": true,
     "persistentT3": true,
-    "neverSleep": true
+    "neverSleep": true,
+    "exposure": {
+      "tailnetOnlyPorts": [
+        { "protocol": "tcp", "port": 3390 },
+        { "protocol": "tcp", "port": 3391 }
+      ]
+    }
   }
 }
