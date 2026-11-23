@@ -36,6 +36,7 @@
     "fleet:repair": "sh scripts/dev/fleet.sh fleet-repair",
     "fleet:t3": "sh scripts/dev/fleet.sh t3-status",
     "fleet:commands": "sh scripts/dev/fleet.sh commands --json",
+    "fleet:latest": "sh scripts/dev/fleet-latest.sh",
     "personal": "bun packages/personal-cli/src/cli.ts",
     "domains": "bun run personal infra-domains",
     "migrate-domains-to-cloudflare": "bun run packages/infra/scripts/migrate-domains-to-cloudflare.ts",
