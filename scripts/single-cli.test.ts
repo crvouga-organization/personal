@@ -33,11 +33,14 @@ test('legacy domain tasks forward to personal rather than independent CLIs', () 
   for (const name of ['password-manager', 'health', 'health:fix', 'domains']) {
     expect(scripts[name]).toStartWith('bun run personal ');
   }
-  // Fleet tasks run dev-fleet at the pinned revision, not personal.
+  // Fleet tasks run dev-fleet at the pinned revision (or move the pins to the
+  // latest dev-fleet), not personal.
   for (const name of Object.keys(scripts).filter(
     (name) => name === 'cliproxy' || /^fleet(:|$)/.test(name)
   ))
-    expect(scripts[name]).toMatch(/^sh scripts\/dev\/fleet(-health)?\.sh/);
+    expect(scripts[name]).toMatch(
+      /^sh scripts\/dev\/fleet(-health|-latest)?\.sh/
+    );
 });
 
 test('custom Vault operations live behind personal, with no global copied wrapper installer', () => {
