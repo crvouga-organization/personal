@@ -21,13 +21,29 @@ git -C "$source" cat-file -e "$revision^{commit}" 2>/dev/null || { echo "dev-fle
 export DEVFLEET_REPO="$source" DEVFLEET_CONFIG="$root/fleet.json"
 command=${1:?Usage: fleet.sh COMMAND [ARGS]}
 shift
+fleet="$HOME/.local/share/personal/fleet"
 if [ "$command" = fleet-sync ]; then
+  # Never move a machine back to an older dev-fleet. A stale checkout pins an
+  # older revision, and its bootstrap installs that revision's mise over the
+  # newer one the global config requires, which breaks every mise command on
+  # the machine (claude, t3 and fleet-sync included). Compared by commit date,
+  # since dev-fleet's history may be rewritten.
+  applied_at=''
+  if [ -e "$fleet/current/.git" ]; then
+    applied_at=$(git -C "$fleet/current" show -s --format=%ct HEAD 2>/dev/null || true)
+  fi
+  pinned_at=$(git -C "$source" show -s --format=%ct "$revision")
+  if [ -n "$applied_at" ] && [ "$pinned_at" -lt "$applied_at" ]; then
+    applied=$(git -C "$fleet/current" rev-parse HEAD)
+    echo "This checkout pins dev-fleet $revision, older than $applied, which this machine already runs." >&2
+    echo "Update the checkout (git pull on main, or merge origin/main into this branch), then rerun." >&2
+    exit 5
+  fi
   # The manager entry point: a clean checkout of the pinned revision.
   exec sh -c "$(git -C "$source" show "$revision:bootstrap/fleet-manager-run.sh")" fleet-manager-run "$revision" "$@"
 fi
 # Every other command runs from a checkout of the pinned revision that
 # fleet-sync prepared: the manager's run checkout, or the one applied on a worker.
-fleet="$HOME/.local/share/personal/fleet"
 checkout=''
 for candidate in "$fleet/manager-runs/$revision" "$fleet/revisions/$revision"; do
   if [ -d "$candidate/node_modules" ]; then
