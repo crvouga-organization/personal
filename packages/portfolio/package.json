@@ -43,7 +43,7 @@
     "@astrojs/sitemap": "^3.7.6",
     "@axe-core/playwright": "^4.14.0",
     "@storybook-astro/framework": "1.17.0",
-    "@storybook/builder-vite": "10.6.7",
+    "@storybook/builder-vite": "10.6.8",
     "@types/bun": "catalog:",
     "@types/culori": "4.0.1",
     "@types/stopword": "2.0.3",
@@ -58,7 +58,7 @@
     "prettier": "catalog:",
     "pretty-ms": "^10.0.0",
     "stopword": "3.1.5",
-    "storybook": "10.6.7",
+    "storybook": "10.6.8",
     "typescript": "catalog:",
     "zod": "4.6.7"
   }
