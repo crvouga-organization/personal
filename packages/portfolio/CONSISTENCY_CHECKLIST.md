@@ -40,7 +40,7 @@ I own product features end to end, from design doc to reliable production, and s
 - Infra & CI: AWS, OpenTofu, GitHub Actions, Docker, Cloudflare, NixOS, OpenBao, Playwright, Railway, S3
 - Frontend: React, Nuxt, React Native, Tailwind, Vue, Astro
 - Data: Postgres, SQLite, MySQL, DynamoDB, Neo4j
-- Backend: Express, Flask, Node.js, GraphQL, Bun, Graphene, WebSockets
+- Backend: Express, Flask, GraphQL, Node.js, Bun, Graphene, WebSockets
 
 ## Open to work
 
