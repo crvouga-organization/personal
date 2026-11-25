@@ -150,12 +150,13 @@ async function readKv(
   config: InfraConfig,
   token: string | undefined,
   kvConfig: string,
+  credentialPath?: string,
 ): Promise<KvRead> {
   if (!token) {
     return { ok: false, unverifiable: true, reason: "no Vault token (set VAULT_TOKEN or run `bun run vault:login`)" };
   }
   const { kv } = vaultConfigOrDefault(config);
-  const path = `${kv.mount}/data/${kv.project}/${kvConfig}`;
+  const path = `${kv.mount}/data/${credentialPath ?? `${kv.project}/${kvConfig}`}`;
   try {
     const res = await getJson(ctx, `${vaultAddr(config)}/v1/${path}`, { "X-Vault-Token": token });
     if (res.status !== 200) {
@@ -200,11 +201,12 @@ export function createHealthContext(input: ContextInput): HealthContext {
     readFile: (path) => readFileSync(path, "utf8"),
     vaultToken,
     githubToken: memoize(() => readGithubToken(env)),
-    kv: (kvConfig) => {
-      const cached = kvReads.get(kvConfig);
+    kv: (kvConfig, credentialPath) => {
+      const key = credentialPath ?? `${vaultConfigOrDefault(input.config).kv.project}/${kvConfig}`;
+      const cached = kvReads.get(key);
       if (cached) return cached;
-      const read = readKv(base, input.config, vaultToken(), kvConfig);
-      kvReads.set(kvConfig, read);
+      const read = readKv(base, input.config, vaultToken(), kvConfig, credentialPath);
+      kvReads.set(key, read);
       return read;
     },
   };

@@ -93,6 +93,11 @@ export const ADVICE: Advice[] = [
     'Advisory for an unused domain; ignore unless you plan to use it.'
   ),
   when(
+    'storage',
+    /bucket/,
+    'Review the storage inventory, foundation bucket and token plan, and Vault credential document. Apply changes through the Deploy workflow, then verify that the bucket lists.'
+  ),
+  when(
     'drift',
     /state bucket|plan/,
     'Re-run with --drift and the OpenTofu state credentials (see packages/infra/tofu/README.md).'

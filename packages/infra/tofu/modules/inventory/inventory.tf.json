@@ -2020,6 +2020,16 @@
           }
         ]
       },
+      "dedicated_object_stores": {
+        "fleet-state": {
+          "bucket": "crvouga-fleet-state",
+          "credential_path": "fleet-recovery/state"
+        },
+        "beszel-backups": {
+          "bucket": "crvouga-beszel-backups",
+          "credential_path": "fleet-recovery/monitoring"
+        }
+      },
       "object_stores": [
         {
           "id": "development",

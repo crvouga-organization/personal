@@ -72,6 +72,14 @@ variables {
 run "complete_adoption_plan" {
   command = plan
   assert {
+    condition = alltrue([for id, store in local.config.dedicated_object_stores :
+      toset(keys(jsondecode(one(cloudflare_account_token.dedicated_storage[id].policies).resources))) == toset([
+        "com.cloudflare.edge.r2.bucket.${var.cloudflare_account_id}_default_${store.bucket}"
+      ]) && !contains(keys(jsondecode(one(cloudflare_account_token.r2.policies).resources)), "com.cloudflare.edge.r2.bucket.${var.cloudflare_account_id}_default_${store.bucket}")
+    ])
+    error_message = "Dedicated bucket tokens must reach only their own bucket, and the shared application token must exclude dedicated buckets."
+  }
+  assert {
     condition     = planetscale_postgres_branch.openbao.cluster_size == "PS_5_AWS_ARM" && planetscale_postgres_branch.openbao.region == "us-east" && planetscale_postgres_branch.openbao.major_version == "18"
     error_message = "The database must stay the smallest single-region network-attached size."
   }

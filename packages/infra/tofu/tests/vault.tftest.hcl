@@ -78,7 +78,11 @@ override_data {
   target = data.terraform_remote_state.foundation
   values = {
     outputs = {
-      buckets              = { development = "dev-bucket", production = "prd-bucket" }
+      buckets = { development = "dev-bucket", production = "prd-bucket" }
+      dedicated_object_store_keys = {
+        fleet-state    = { access_key_id = "state-id", secret_access_key = "state-key" }
+        beszel-backups = { access_key_id = "monitoring-id", secret_access_key = "monitoring-key" }
+      }
       r2_access_key_id     = "r2-key"
       r2_secret_access_key = "r2-secret"
       router_token         = "router-token"
@@ -133,6 +137,18 @@ variables {
       { for key in jsondecode(file("../modules/inventory/inventory.tf.json")).locals.inventory.vault.kv_keys : key.name => "test-${key.name}" if try(key.required, false) && !try(key.generated, false) },
       { for name in toset(flatten([for service in jsondecode(file("../modules/inventory/inventory.tf.json")).locals.inventory.services : [for secret in try(service.secrets, []) : secret.name if !contains([for key in jsondecode(file("../modules/inventory/inventory.tf.json")).locals.inventory.vault.kv_keys : key.name if try(key.generated, false)], secret.name)]])) : name => "test-${name}" }
     )
+  }
+}
+
+run "dedicated_storage_credentials" {
+  command = plan
+  assert {
+    condition = alltrue([for id, store in local.config.dedicated_object_stores :
+      vault_kv_secret_v2.dedicated_storage[id].name == store.credential_path &&
+      jsondecode(vault_kv_secret_v2.dedicated_storage[id].data_json).S3_BUCKET == store.bucket &&
+      jsondecode(vault_kv_secret_v2.dedicated_storage[id].data_json).S3_SECRET_ACCESS_KEY == data.terraform_remote_state.foundation.outputs.dedicated_object_store_keys[id].secret_access_key
+    ])
+    error_message = "Each dedicated bucket must have an isolated Vault document containing its own credentials."
   }
 }
 

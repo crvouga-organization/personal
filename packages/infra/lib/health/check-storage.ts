@@ -14,9 +14,9 @@ function unavailable(name: string, doc: Extract<KvRead, { ok: false }>): CheckRe
   return doc.unverifiable ? skip(name, doc.reason) : fail(name, doc.reason);
 }
 
-async function checkBucket(ctx: HealthContext, store: ObjectStoreSpec, kvConfig: string): Promise<CheckResult> {
+async function checkBucket(ctx: HealthContext, store: ObjectStoreSpec, kvConfig: string, credentialPath?: string): Promise<CheckResult> {
   const name = `bucket ${store.bucket ?? store.id} (${kvConfig})`;
-  const doc = await ctx.kv(kvConfig);
+  const doc = await ctx.kv(kvConfig, credentialPath);
   if (!doc.ok) return unavailable(name, doc);
   const read = (key: string): string => doc.data[key]?.trim() ?? "";
   const access = {
@@ -91,6 +91,18 @@ export async function checkStorage(ctx: HealthContext): Promise<readonly CheckRe
   const buckets = (ctx.config.object_stores ?? []).flatMap((store) =>
     (store.namespaces ?? []).map((kvConfig) => checkBucket(ctx, store, kvConfig)),
   );
+  for (const [id, store] of Object.entries(ctx.config.dedicated_object_stores ?? {})) {
+    buckets.push(checkBucket(ctx, {
+      id,
+      provider: "r2",
+      bucket: store.bucket,
+      bucket_secret: "S3_BUCKET",
+      endpoint_secret: "S3_ENDPOINT",
+      region_secret: "S3_REGION",
+      access_key_secret: "S3_ACCESS_KEY_ID",
+      secret_key_secret: "S3_SECRET_ACCESS_KEY",
+    }, id, store.credential_path));
+  }
   const groups = await Promise.all([
     Promise.all(buckets),
     postgresChecks(ctx, ctx.config.postgres),
