@@ -277,6 +277,7 @@ export type InfraConfig = {
   readonly vault?: VaultConfig;
   readonly postgres?: PostgresConfig;
   readonly object_stores?: readonly ObjectStoreSpec[];
+  readonly dedicated_object_stores?: Readonly<Record<string, { readonly bucket: string; readonly credential_path: string }>>;
   readonly tunnels?: readonly TunnelSpec[];
   readonly services: readonly ServiceSpec[];
   readonly aliases?: readonly ServiceAliasSpec[];

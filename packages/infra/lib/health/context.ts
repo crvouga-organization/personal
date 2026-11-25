@@ -81,8 +81,8 @@ export type HealthContext = {
   readonly readFile: (path: string) => string;
   readonly vaultToken: () => string | undefined;
   readonly githubToken: () => string | undefined;
-  /** Memoized read of `<mount>/data/<project>/<config>`. */
-  readonly kv: (config: string) => Promise<KvRead>;
+  /** Memoized read of a KV document. Defaults to the configured project and config. */
+  readonly kv: (config: string, credentialPath?: string) => Promise<KvRead>;
 };
 
 export const DEFAULT_HEALTH_OPTIONS: HealthOptions = {
