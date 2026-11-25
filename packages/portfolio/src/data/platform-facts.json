@@ -14,7 +14,7 @@
     "state",
     "vault"
   ],
-  "preventDestroyGuards": 46,
+  "preventDestroyGuards": 47,
   "healthChecks": 14,
   "inventoryServices": 26,
   "packages": 17,

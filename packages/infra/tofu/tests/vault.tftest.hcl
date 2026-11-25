@@ -331,3 +331,22 @@ run "hub_tunnel_credential_is_readable_only_by_the_hub_token" {
     error_message = "Only the hub node's worker token may read the dashboard connector credential."
   }
 }
+
+run "worker_token_delivery" {
+  command = plan
+  override_resource {
+    target = vault_token.managed["fleet-worker-chris-vouga-ms-a2-2"]
+    values = { id = "worker-accessor", client_token = "worker-token" }
+  }
+  assert {
+    condition = (
+      vault_token.managed["fleet-worker-chris-vouga-ms-a2-2"].policies == toset(["fleet-worker-chris-vouga-ms-a2-2"]) &&
+      vault_token.managed["fleet-worker-chris-vouga-ms-a2-2"].renewable &&
+      vault_token.managed["fleet-worker-chris-vouga-ms-a2-2"].period == "768h" &&
+      vault_kv_secret_v2.token_delivery["fleet-worker-chris-vouga-ms-a2-2"].name == "personal/workers/chris-vouga-ms-a2-2" &&
+      jsondecode(vault_kv_secret_v2.token_delivery["fleet-worker-chris-vouga-ms-a2-2"].data_json) == { token = "worker-token", accessor = "worker-accessor" } &&
+      alltrue([for sinks in values(local.token_sinks) : !contains(values(sinks), "worker-token")])
+    )
+    error_message = "Deliver the scoped periodic worker token and its revocation accessor only to its own KV document."
+  }
+}
