@@ -73,9 +73,9 @@ run "complete_adoption_plan" {
   command = plan
   assert {
     condition = alltrue([for id, store in local.config.dedicated_object_stores :
-      keys(jsondecode(one(cloudflare_account_token.dedicated_storage[id].policies).resources)) == [
+      toset(keys(jsondecode(one(cloudflare_account_token.dedicated_storage[id].policies).resources))) == toset([
         "com.cloudflare.edge.r2.bucket.${var.cloudflare_account_id}_default_${store.bucket}"
-      ] && !contains(keys(jsondecode(one(cloudflare_account_token.r2.policies).resources)), "com.cloudflare.edge.r2.bucket.${var.cloudflare_account_id}_default_${store.bucket}")
+      ]) && !contains(keys(jsondecode(one(cloudflare_account_token.r2.policies).resources)), "com.cloudflare.edge.r2.bucket.${var.cloudflare_account_id}_default_${store.bucket}")
     ])
     error_message = "Dedicated bucket tokens must reach only their own bucket, and the shared application token must exclude dedicated buckets."
   }
