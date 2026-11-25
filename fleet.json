@@ -70,6 +70,17 @@
         "user": "chrisvouga",
         "t3Port": 3773
       }
+    },
+    {
+      "id": "chris-vouga-ms-a2-2",
+      "os": "linux",
+      "network": {
+        "tailscaleName": "chris-vouga-ms-a2-2.tail4829dc.ts.net",
+        "sshPort": 22,
+        "user": "chris-vouga",
+        "t3Port": 3773,
+        "hostKey": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIIUc5MMxpCViOfMFOUinWKxE58aDI9SJp3Z3BXwoPV0t"
+      }
     }
   ],
   "services": {

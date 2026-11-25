@@ -302,8 +302,7 @@
             },
             {
               "url": "https://www.moviefinder.app/",
-              "status": 302,
-              "location": "/auth?returnTo=%2F"
+              "status": 200
             }
           ],
           "availability": "critical",
@@ -1446,6 +1445,10 @@
             "file": "packages/vault-service/config/policies/dev-read.hcl"
           },
           {
+            "name": "fleet-worker-chris-vouga-ms-a2-2",
+            "file": "packages/vault-service/config/policies/fleet-worker-chris-vouga-ms-a2-2.hcl"
+          },
+          {
             "name": "beszel-hub-read",
             "file": "packages/vault-service/config/policies/beszel-hub-read.hcl"
           }
@@ -1493,6 +1496,12 @@
             "period": "768h",
             "configs": ["prd"],
             "sink": "vault_kv.FLEET_WORKER_TOKEN_CHRIS_VOUGA_MS_A2"
+          },
+          {
+            "name": "fleet-worker-chris-vouga-ms-a2-2",
+            "policy": "fleet-worker-chris-vouga-ms-a2-2",
+            "period": "768h",
+            "sink": "vault_document.personal/workers/chris-vouga-ms-a2-2"
           },
           {
             "name": "fleet-worker-chris-vouga-mac-studio",
