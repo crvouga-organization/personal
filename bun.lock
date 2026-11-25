@@ -256,7 +256,7 @@
       "name": "@pkgs/workstation",
       "version": "0.0.0",
       "dependencies": {
-        "@crvouga/dev-fleet": "0.17.0",
+        "@crvouga/dev-fleet": "0.17.1",
         "@inquirer/prompts": "catalog:",
         "@opencode-ai/plugin": "1.19.6",
         "@pkgs/assert": "workspace:*",
@@ -468,7 +468,7 @@
 
     "@conventional-changelog/template": ["@conventional-changelog/template@1.4.0", "", {}, "sha512-aalGyl7dbB5PArRebDIX43ZvBlXrYm9uWzGJ26t+4SzJVPsOuvfILGGbw5X4yX7i50YEmJ8zvbiWnqH/AAnZqg=="],
 
-    "@crvouga/dev-fleet": ["@crvouga/dev-fleet@0.17.0", "", { "dependencies": { "@inquirer/prompts": "8.8.1", "boxen": "9.0.0", "bun": "1.4.5", "chalk": "6.0.1", "cli-table3": "0.6.5", "commander": "15.1.0", "fuse.js": "7.5.0", "ora": "10.0.0", "yaml": "^2.8.0" }, "bin": { "devfleet": "bin/devfleet.mjs" } }, "sha512-eoUw872fTwZnOps2rKh1BMeac4wvbmkifC2TNpmskbhktZN/ewRzHGCNPPtdAOF0ijg1xfBmU70SWYKaH9GsPg=="],
+    "@crvouga/dev-fleet": ["@crvouga/dev-fleet@0.17.1", "", { "dependencies": { "@inquirer/prompts": "8.8.1", "boxen": "9.0.0", "bun": "1.4.5", "chalk": "6.0.1", "cli-table3": "0.6.5", "commander": "15.1.0", "fuse.js": "7.5.0", "ora": "10.0.0", "yaml": "^2.8.0" }, "bin": { "devfleet": "bin/devfleet.mjs" } }, "sha512-noHrlFbhaj3nYTdsNKgDDQoNn4FniZ+y4FjDcKex0jkzpa1HxOkiFLZppvyS97JrXuDNqARUvt52WHe8a7BBMA=="],
 
     "@crvouga/personal": ["@crvouga/personal@workspace:packages/personal-cli"],
 
