@@ -127,6 +127,18 @@ resource "vault_token" "managed" {
   depends_on        = [vault_policy.this]
   lifecycle { prevent_destroy = true }
 }
+# vault_token uses the token accessor as its resource ID.
+resource "vault_kv_secret_v2" "token_delivery" {
+  for_each = { for token in local.vault.tokens : token.name => trimprefix(token.sink, "vault_document.") if startswith(token.sink, "vault_document.") }
+  mount    = vault_mount.secret.path
+  name     = each.value
+  data_json = jsonencode({
+    token    = vault_token.managed[each.key].client_token
+    accessor = vault_token.managed[each.key].id
+  })
+  lifecycle { prevent_destroy = true }
+}
+
 locals {
   token_sinks = {
     for config in local.vault.kv.configs : config => {
