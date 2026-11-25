@@ -24,6 +24,14 @@
       "proxy-tunnel-token": {
         "path": "cliproxy-fleet/tunnel",
         "field": "TUNNEL_TOKEN"
+      },
+      "monitoring-backup-access-key": {
+        "path": "fleet-recovery/monitoring",
+        "field": "S3_ACCESS_KEY_ID"
+      },
+      "monitoring-backup-secret-key": {
+        "path": "fleet-recovery/monitoring",
+        "field": "S3_SECRET_ACCESS_KEY"
       }
     }
   },
@@ -72,7 +80,17 @@
       "hubPort": 8443,
       "publicUrl": "https://beszel.chrisvouga.dev",
       "managerAccount": "fleet-manager@chrisvouga.dev",
-      "viewerAccount": "public-viewer@chrisvouga.dev"
+      "viewerAccount": "public-viewer@chrisvouga.dev",
+      "backups": {
+        "schedule": "15 3 * * *",
+        "keep": 7,
+        "storage": {
+          "bucket": "crvouga-beszel-backups",
+          "region": "auto",
+          "endpoint": "https://2698e76355a8c8d1ee21e15fa9fd44f7.r2.cloudflarestorage.com",
+          "forcePathStyle": true
+        }
+      }
     }
   },
   "ubuntu": {
@@ -102,5 +120,11 @@
         { "protocol": "tcp", "port": 3391 }
       ]
     }
+  },
+  "state": {
+    "bucket": "crvouga-fleet-state",
+    "region": "auto",
+    "endpoint": "https://2698e76355a8c8d1ee21e15fa9fd44f7.r2.cloudflarestorage.com",
+    "prefix": "dev-fleet"
   }
 }
