@@ -302,8 +302,7 @@
             },
             {
               "url": "https://www.moviefinder.app/",
-              "status": 302,
-              "location": "/auth?returnTo=%2F"
+              "status": 200
             }
           ],
           "availability": "critical",
