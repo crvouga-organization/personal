@@ -184,25 +184,28 @@ const badge = authorshipOf(project);
     flex-direction: column;
     overflow: hidden;
   }
-  /* Fixed aspect keeps every row aligned regardless of the source ratio.
-     The contents are absolutely positioned so the box's height comes only
-     from `aspect-ratio` — in flow, a tall screenshot's natural height wins
-     and the cards stop matching. `flex: 0 0 auto` stops the column flex
-     parent from shrinking it afterwards. */
   /* The lead flagship: cover beside its text across the full row. */
   @media (min-width: 1000px) {
     .project.lead {
       display: grid;
-      grid-template-columns: 1.25fr 1fr;
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
       align-items: stretch;
     }
     .project.lead .cover-box {
-      height: 100%;
+      /* The body sets the row height. Stretch the cover within its track. */
+      aspect-ratio: auto;
+      border-bottom: 0;
+      border-inline-end: 1px solid var(--paper-border);
     }
     .project.lead .desc {
       font-size: var(--text-md);
     }
   }
+  /* Fixed aspect keeps every row aligned regardless of the source ratio.
+     The contents are absolutely positioned so the box's height comes only
+     from `aspect-ratio` — in flow, a tall screenshot's natural height wins
+     and the cards stop matching. `flex: 0 0 auto` stops the column flex
+     parent from shrinking it afterwards. */
   .cover-box {
     position: relative;
     flex: 0 0 auto;
