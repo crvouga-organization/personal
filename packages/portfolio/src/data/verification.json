@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "fetchedAt": "2026-11-25T13:47:39.278Z",
-  "window": { "from": "2026-09-17", "to": "2026-11-25" },
+  "fetchedAt": "2026-11-26T13:18:25.382Z",
+  "window": { "from": "2026-09-17", "to": "2026-11-26" },
   "workspace": {
     "repo": "crvouga/personal",
-    "mergedPrs": 256,
-    "automatedPrsExcluded": 71,
+    "mergedPrs": 266,
+    "automatedPrsExcluded": 72,
     "automationPatterns": ["chore/github-insights-refresh"],
     "prsFailedCiBeforeMerge": 44,
     "prsFailedCiBeforeMergeNumbers": [
@@ -24,7 +24,7 @@
       319, 320, 323, 325, 327, 330, 332, 335, 336, 337, 338, 341, 342, 345, 347,
       350, 353, 356, 358, 360, 363, 364
     ],
-    "pullRequestRunsExamined": 1212,
+    "pullRequestRunsExamined": 1260,
     "earlierAttemptsExamined": 21
   },
   "repos": [
@@ -33,7 +33,7 @@
       "url": "https://github.com/crvouga/mockingbird",
       "defaultBranch": "main",
       "stars": 5,
-      "commits": 1640,
+      "commits": 1696,
       "openIssues": 1,
       "openPrs": 1,
       "license": null,
@@ -61,24 +61,24 @@
       "url": "https://github.com/crvouga/personal",
       "defaultBranch": "main",
       "stars": 1,
-      "commits": 2087,
-      "openIssues": 1,
-      "openPrs": 1,
+      "commits": 2098,
+      "openIssues": 0,
+      "openPrs": 0,
       "license": null,
       "defaultBranchCiWorkflow": "CI",
       "defaultBranchCiConclusion": "success",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga/personal/actions/runs/45596627600",
-      "defaultBranchCiCompletedAt": "2026-11-25T12:21:37Z"
+      "defaultBranchCiRunUrl": "https://github.com/crvouga/personal/actions/runs/45816485335",
+      "defaultBranchCiCompletedAt": "2026-11-26T12:14:58Z"
     }
   ],
   "mockingbird": {
-    "commit": "5691f565b17d14c8c385f54be6ebb3b700204ede",
-    "testFiles": 1365,
-    "testCallSites": 5684,
-    "publishedPackages": 134,
-    "emulators": 128,
+    "commit": "49e286377877e98dd9fa38389b2135c42000a3f9",
+    "testFiles": 1371,
+    "testCallSites": 5821,
+    "publishedPackages": 135,
+    "emulators": 129,
     "wipEmulators": 16,
-    "propertyTestFiles": 128
+    "propertyTestFiles": 129
   },
   "mockingbirdCatalog": {
     "url": "https://mockingbird.chrisvouga.dev/catalog.json",
