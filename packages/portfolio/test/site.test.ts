@@ -296,6 +296,34 @@ describe('accessibility', () => {
 });
 
 describe('layout', () => {
+  for (const path of ['/', ...VARIANT_PRESENTATIONS.map((role) => role.home)]) {
+    test(
+      `project covers stay clear of the card text on ${path}`,
+      async () => {
+        const { page } = await open(path);
+        const covers = page.locator('#projects .project .cover-box');
+        expect(await covers.count()).toBeGreaterThan(0);
+        for (const width of [320, 699, 700, 999, 1000, 1280, 1920]) {
+          await page.setViewportSize({ width, height: 900 });
+          const overlaps = await covers.evaluateAll((boxes) =>
+            boxes.flatMap((box) => {
+              const body = box.nextElementSibling;
+              if (!body) throw new Error('Missing project body');
+              const cover = box.getBoundingClientRect();
+              const text = body.getBoundingClientRect();
+              return cover.right > text.left && cover.bottom > text.top
+                ? [body.querySelector('h3')?.textContent?.trim()]
+                : [];
+            })
+          );
+          expect({ width, overlaps }).toEqual({ width, overlaps: [] });
+        }
+        await page.close();
+      },
+      TIMEOUT_MS
+    );
+  }
+
   for (const scheme of ['dark', 'light'] as const) {
     for (const width of [320, 390, 1440]) {
       test(
