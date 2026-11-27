@@ -41,8 +41,8 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "@astrojs/sitemap": "^3.7.6",
-    "@axe-core/playwright": "^4.14.0",
-    "@storybook-astro/framework": "1.17.0",
+    "@axe-core/playwright": "^4.14.1",
+    "@storybook-astro/framework": "1.18.0",
     "@storybook/builder-vite": "10.6.8",
     "@types/bun": "catalog:",
     "@types/culori": "4.0.1",
