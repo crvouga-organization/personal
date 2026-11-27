@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "fetchedAt": "2026-11-26T13:18:25.382Z",
-  "window": { "from": "2026-09-17", "to": "2026-11-26" },
+  "fetchedAt": "2026-11-27T13:17:31.094Z",
+  "window": { "from": "2026-09-17", "to": "2026-11-27" },
   "workspace": {
     "repo": "crvouga/personal",
-    "mergedPrs": 266,
-    "automatedPrsExcluded": 72,
+    "mergedPrs": 274,
+    "automatedPrsExcluded": 73,
     "automationPatterns": ["chore/github-insights-refresh"],
     "prsFailedCiBeforeMerge": 44,
     "prsFailedCiBeforeMergeNumbers": [
@@ -24,7 +24,7 @@
       319, 320, 323, 325, 327, 330, 332, 335, 336, 337, 338, 341, 342, 345, 347,
       350, 353, 356, 358, 360, 363, 364
     ],
-    "pullRequestRunsExamined": 1260,
+    "pullRequestRunsExamined": 1302,
     "earlierAttemptsExamined": 21
   },
   "repos": [
@@ -61,14 +61,14 @@
       "url": "https://github.com/crvouga/personal",
       "defaultBranch": "main",
       "stars": 1,
-      "commits": 2098,
+      "commits": 2107,
       "openIssues": 0,
       "openPrs": 0,
       "license": null,
       "defaultBranchCiWorkflow": "CI",
       "defaultBranchCiConclusion": "success",
-      "defaultBranchCiRunUrl": "https://github.com/crvouga/personal/actions/runs/45816485335",
-      "defaultBranchCiCompletedAt": "2026-11-26T12:14:58Z"
+      "defaultBranchCiRunUrl": "https://github.com/crvouga/personal/actions/runs/45989250654",
+      "defaultBranchCiCompletedAt": "2026-11-27T11:19:47Z"
     }
   ],
   "mockingbird": {
