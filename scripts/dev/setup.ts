@@ -19,7 +19,7 @@ function run(args: string[]): void {
     throw new Error(`${args.join(' ')} failed (${result.status})`);
 }
 
-/** Resolves to false when dev-fleet owns this machine's global config. */
+/** Resolves to false when homelab owns this machine's global config. */
 export async function syncTools(): Promise<boolean> {
   const dir = globalConfigDir();
   assertManagedConfig(dir);
@@ -46,7 +46,7 @@ if (import.meta.main) {
   console.log(
     published
       ? 'Shared toolchain installed globally. Reopen terminals/editors, or refresh this terminal with: exec "$SHELL" -l (Unix).'
-      : 'Shared toolchain installed for this checkout. The global mise config is the one dev-fleet published on this fleet machine and was left unchanged.'
+      : 'Shared toolchain installed for this checkout. The global mise config is the one homelab published on this fleet machine and was left unchanged.'
   );
   console.log(
     'Verify: mise exec -- bun scripts/dev/doctor.ts (add --docker to require a running Docker engine).'

@@ -53,7 +53,7 @@ const unix = test.skipIf(process.platform === 'win32');
 
 unix('bootstrap keeps the pinned mise and any newer one', () => {
   expect(pinned).toMatch(/^\d+\.\d+\.\d+$/);
-  // A fleet machine: dev-fleet installed a newer mise and its global config requires it.
+  // A fleet machine: homelab installed a newer mise and its global config requires it.
   for (const installed of [pinned!, '2999.1.0', '2026.10.100']) {
     expect(bootstrap(installed)).toEqual({ status: 0, downloads: '' });
   }

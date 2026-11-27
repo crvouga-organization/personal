@@ -129,7 +129,7 @@ identity use existing SSH configuration or Tailscale SSH; login is checked separ
 2. MagicDNS resolves the full name, and the SSH port is open
 3. SSH login by alias, several tries (`--tries`, default 3) to catch flaky connections
 4. SSH as `user@full-name`, which is how VS Code Remote-SSH and T3 connect
-5. Machine health over SSH (dev-fleet's `ansible/net/remote-probe.sh`): CPU load per core, RAM/swap, free disk
+5. Machine health over SSH (homelab's `ansible/net/remote-probe.sh`): CPU load per core, RAM/swap, free disk
 6. T3 server reachable over Tailscale at `:<t3Port>/.well-known/t3/environment`, or through verified SSH to the remote loopback endpoint for loopback-only servers; reports the route and compares versions with this machine. This is a readiness probe, not a T3 pairing test.
 
 It also checks this machine: Tailscale running, `tailscale` on `PATH` (T3
@@ -145,11 +145,11 @@ as a remote. Exit code 1 means at least one check failed.
 - `tailscale` / `code` wrappers in the global bin dir when the apps are installed but their CLIs are not on `PATH`
 - the background check (`personal workstation net watch install`): a launchd agent on macOS or a systemd user timer on Linux that runs `personal workstation net check --notify --quiet` every 5 minutes and posts a desktop notification when failures appear or clear. History: `<cache>/ws/net/check.log`.
 
-Adding a fleet machine: add it to `fleet.json`, then run `bash scripts/dev/project-action.sh fleet-sync` on the manager (dev-fleet enrolls it). Workstation network diagnostics consume that same file; private connection overrides remain local.
+Adding a fleet machine: add it to `fleet.json`, then run `bash scripts/dev/project-action.sh fleet-sync` on the manager (`homelab converge` enrolls it). Workstation network diagnostics consume that same file; private connection overrides remain local.
 
 ### Platform design
 
-All OS-specific behavior lives behind dev-fleet's `Platform` interface (`@crvouga/dev-fleet/src/platform`): `DarwinPlatform`, `LinuxPlatform`, `WindowsPlatform`, `FallbackPlatform`, selected by the `getPlatform()` factory. Commands never branch on `process.platform` directly.
+All OS-specific behavior lives behind homelab's `Platform` interface (`@crvouga/homelab/src/platform`): `DarwinPlatform`, `LinuxPlatform`, `WindowsPlatform`, `FallbackPlatform`, selected by the `getPlatform()` factory. Commands never branch on `process.platform` directly.
 
 - **macOS**: full stack — Swift `OpenCodeNotifier` app (click-to-focus, sounds), osascript fallback.
 - **Linux**: `notify-send` / `zenity` fallback (no sounds, no click-to-focus); symlinks + provider sync fully work; `personal workstation net watch` uses a systemd user timer.
@@ -523,10 +523,10 @@ or tool pins, then `bun run check:llms` to verify all published copies.
 ## Fleet
 
 Fleet machines, agent launchers and profiles, T3 provider instances and
-monitoring are managed by [dev-fleet](https://github.com/crvouga/dev-fleet)
+monitoring are managed by [homelab](https://github.com/crvouga/homelab)
 (this repository pins it in `fleet.revision` and configures it in `fleet.json`).
-`personal workstation agents …` is dev-fleet's agent profile command, imported
-from the `@crvouga/dev-fleet` package.
+`personal workstation agents …` is homelab's agent profile command, imported
+from the `@crvouga/homelab` package.
 
 Docker runtime setup on macOS is exposed through
 `personal workstation tools docker-setup`. The adapter runs the shared,

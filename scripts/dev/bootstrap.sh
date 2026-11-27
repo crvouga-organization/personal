@@ -49,9 +49,9 @@ fi
 cd "$checkout"
 # MISE_VERSION is the minimum (mise.toml min_version) and the version installed
 # when mise is missing or older. A newer mise is kept: on a fleet machine
-# dev-fleet owns ~/.local/bin/mise and its global config may require that newer
+# homelab owns ~/.local/bin/mise and its global config may require that newer
 # version, so replacing it with this pin would break every mise command there,
-# fleet-sync included.
+# converge included.
 installed_mise=$("$HOME/.local/bin/mise" --version 2>/dev/null | awk '{print $1}') || installed_mise=''
 mise_is_current() {
   [[ "$installed_mise" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || return 1

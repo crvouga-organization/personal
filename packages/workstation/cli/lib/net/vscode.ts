@@ -2,14 +2,14 @@ import { existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
-import type { PlatformName } from '@crvouga/dev-fleet/src/platform/types';
+import type { PlatformName } from '@crvouga/homelab/src/platform/types';
 import { shortName, type NetHost } from './inventory';
 
 type Env = Readonly<Record<string, string | undefined>>;
 
 /**
  * VS Code user `settings.json`, or `null` when unknown on this OS. Lives here
- * because VS Code is workstation configuration: dev-fleet's `Platform` stopped
+ * because VS Code is workstation configuration: homelab's `Platform` stopped
  * describing it in 0.9.
  */
 export function vscodeSettingsPath(

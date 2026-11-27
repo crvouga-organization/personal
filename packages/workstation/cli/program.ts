@@ -1,4 +1,4 @@
-import { registerAgents } from '@crvouga/dev-fleet/src/agents/command';
+import { registerAgents } from '@crvouga/homelab/src/agents/command';
 import { Command } from 'commander';
 
 import { cmdBackup, cmdBackups, cmdReset } from './commands/backup-cmds';

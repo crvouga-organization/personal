@@ -23,38 +23,38 @@ source-only (not published) and holds `infra-*` passthroughs, `workstation` and
 `commands`. Packages may implement private adapters/workers but must not declare
 another executable, installer, launcher or independent user command interface.
 Root task scripts are aliases or build/test and bootstrap tasks, not additional
-CLI products. Third-party tools, including dev-fleet, retain their own CLIs.
+CLI products. Third-party tools, including homelab, retain their own CLIs.
 
-## The fleet runs from dev-fleet
+## The fleet runs from homelab
 
-All fleet management (machines, Ansible policy, agent launchers, T3 provider instances, monitoring and the CLI proxy) lives in [crvouga/dev-fleet](https://github.com/crvouga/dev-fleet). This repository holds only this fleet's configuration, `fleet.json`, and the pinned dev-fleet commit, `fleet.revision`. `scripts/dev/fleet.sh` runs any dev-fleet command at that pin with this `fleet.json`; everything below goes through it. The **CLI proxy health** workflow runs dev-fleet's proxy checks at the pin.
+All fleet management (machines, Ansible policy, agent launchers, T3 provider instances, monitoring and the CLI proxy) lives in [crvouga/homelab](https://github.com/crvouga/homelab). This repository holds only this fleet's configuration, `fleet.json`, and the pinned homelab commit, `fleet.revision`. `scripts/dev/fleet.sh` runs any homelab command at that pin with this `fleet.json`; everything below goes through it. The **CLI proxy health** workflow runs homelab's proxy checks at the pin.
 
-| Task                                       | Root script               | T3 project action (`bash scripts/dev/project-action.sh …`) |
-| ------------------------------------------ | ------------------------- | ---------------------------------------------------------- |
-| Preview a sync (`fleet-sync --dry-run`)    | `bun run fleet:preview`   | `fleet-preview`                                            |
-| Converge the manager and every worker      | `bun run fleet:sync`      | `fleet-sync`                                               |
-| Read-only audit of every worker            | `bun run fleet:status`    | `fleet-status`                                             |
-| Workers, T3 providers and (manager) proxy  | `bun run fleet:health`    | `fleet-health`                                             |
-| Preview repairs (`--apply --yes` executes) | `bun run fleet:repair`    | `fleet-repair`                                             |
-| T3 provider drift on this machine          | `bun run fleet:t3`        | `fleet-t3-status`                                          |
-| The CLI proxy's operations                 | `bun run cliproxy <op>`   | `infra-cliproxy <op>`                                      |
-| Any other dev-fleet command                | `bun run fleet <command>` |                                                            |
-| The command catalog and agent contract     | `bun run fleet:commands`  |                                                            |
+| Task                                                 | Root script               | T3 project action (`bash scripts/dev/project-action.sh …`) |
+| ---------------------------------------------------- | ------------------------- | ---------------------------------------------------------- |
+| Preview a sync (`converge --dry-run`)                | `bun run fleet:preview`   | `fleet-preview`                                            |
+| Converge the manager and every worker (`converge`)   | `bun run fleet:sync`      | `fleet-sync`                                               |
+| Read-only audit of every worker (`check --workers`)  | `bun run fleet:status`    | `fleet-status`                                             |
+| Workers, T3 providers and (manager) proxy            | `bun run fleet:health`    | `fleet-health`                                             |
+| Preview repairs (`repair`; `--apply --yes` executes) | `bun run fleet:repair`    | `fleet-repair`                                             |
+| T3 provider drift on this machine (`t3`)             | `bun run fleet:t3`        | `fleet-t3-status`                                          |
+| The CLI proxy's operations (`proxy`)                 | `bun run cliproxy <op>`   | `infra-cliproxy <op>`                                      |
+| Any other homelab command                            | `bun run fleet <command>` |                                                            |
+| The command catalog and agent contract               | `bun run fleet:commands`  |                                                            |
 
-- Read `bun run fleet:commands` before using a dev-fleet command. `fleet-sync`, `fleet-node-sync`, `t3-apply` and `t3-cleanup` apply when invoked; only `--dry-run` previews. `--json` does not make a command read-only. The preview is not free of side effects on the manager either: it installs the pinned revision's toolchain there first ([dev-fleet#18](https://github.com/crvouga/dev-fleet/issues/18)), so preview a new `fleet.revision` only when you mean to move the manager to it.
-- `fleet-sync` runs on the manager; started on a worker it hands off to the manager over SSH. Every other command needs the checkout of the pinned revision that `fleet-sync` leaves on the machine.
-- **Always run the latest dev-fleet; never pin an older one.** `fleet.revision` is the head of dev-fleet's default branch and `@crvouga/dev-fleet` is its npm `latest`. The **dev-fleet latest** workflow moves both hourly and auto-merges; `bun run fleet:latest` does the same locally (`--check` only reports). Never revert, downgrade or hold back either pin; if the latest dev-fleet breaks something, file a dev-fleet issue. `fleet.sh fleet-sync` refuses a pin older than the revision the machine already runs (a stale checkout's bootstrap would install an older mise than the global config requires and break every mise command); update the checkout and rerun.
-- Change fleet behaviour in dev-fleet; the pins pick it up. Change this fleet's machines, endpoints or secret locations in `fleet.json`.
-- **Never edit dev-fleet itself**: not `node_modules`, not a clone, not a checkout or file it installs on a machine; the next install or `fleet-sync` replaces them. Do not work around a dev-fleet defect here either. A bug in dev-fleet or a feature it lacks is a GitHub issue at https://github.com/crvouga/dev-fleet/issues (one per defect, after searching the open ones); tell the user what is blocked and link it. Issues are public: no credentials, hostnames, accounts, domains, tailnet names, home-directory paths, raw subprocess output or `fleet.json` contents. Include the dev-fleet version or commit, the command and flags, the failing check IDs and what was expected.
-- Never add fleet code back here. `packages/workstation` uses dev-fleet's platform and agent modules through the published `@crvouga/dev-fleet` npm package.
-- On a fleet machine the global mise configuration belongs to dev-fleet: `scripts/dev/setup.ts` installs this checkout's tools and leaves a global config that carries dev-fleet's marker unchanged. Fleet actions never run this repository's bootstrap.
-- dev-fleet documents a different pin: the `@crvouga/dev-fleet` version in `package.json`, run as `npx devfleet`, with the fleet state in a bucket named under `state` in `fleet.json`. No published release supports that yet ([dev-fleet#17](https://github.com/crvouga/dev-fleet/issues/17)). When one does, replace `fleet.revision` and the clone in `scripts/dev/fleet.sh` with that dependency; the bucket is a cloud resource and goes through OpenTofu first.
+- Read `bun run fleet:commands` before using a homelab command. `converge`, `converge-local`, `t3-reconcile` and `t3-remove` apply when invoked; only `--dry-run` previews. `repair` previews until `--apply --yes`. `--json` does not make a command read-only. `converge --dry-run` does not publish the global mise config; an apply does. A preview still prepares a disposable checkout of the pinned revision.
+- `converge` runs on the manager; started on a worker it hands off to the manager over SSH. Every other command needs the checkout of the pinned revision that `converge` leaves on the machine.
+- **Always run the latest homelab; never pin an older one.** `fleet.revision` is the head of homelab's default branch. `@crvouga/homelab` is a git dependency of that same commit until the package is on npm, then the npm `latest` tag. The **homelab latest** workflow moves the pins hourly and auto-merges; `bun run fleet:latest` does the same locally (`--check` only reports). Never revert, downgrade or hold back either pin; if the latest homelab breaks something, file a homelab issue. `fleet.sh converge` refuses a pin older than the revision the machine already runs (a stale checkout's bootstrap would install an older mise than the global config requires and break every mise command); update the checkout and rerun.
+- Change fleet behaviour in homelab; the pins pick it up. Change this fleet's machines, endpoints or secret locations in `fleet.json`. Leave `state.prefix` as `dev-fleet`: it is the live bucket key, and homelab's schema default `homelab` would orphan that state.
+- **Never edit homelab itself**: not `node_modules`, not a clone, not a checkout or file it installs on a machine; the next install or `converge` replaces them. Do not work around a homelab defect here either. A bug in homelab or a feature it lacks is a GitHub issue at https://github.com/crvouga/homelab/issues (one per defect, after searching the open ones); tell the user what is blocked and link it. Issues are public: no credentials, hostnames, accounts, domains, tailnet names, home-directory paths, raw subprocess output or `fleet.json` contents. Include the homelab version or commit, the command and flags, the failing check IDs and what was expected.
+- Never add fleet code back here. `packages/workstation` uses homelab's platform and agent modules through `@crvouga/homelab`, pinned to the same commit as `fleet.revision`.
+- On a fleet machine the global mise configuration belongs to homelab: `scripts/dev/setup.ts` installs this checkout's tools and leaves a global config that carries homelab's marker (or the pre-rename `dev-fleet` marker) unchanged. Fleet actions never run this repository's bootstrap.
+- homelab documents `npx homelab` from a published `@crvouga/homelab` version. That package is not on npm yet ([homelab#17](https://github.com/crvouga/homelab/issues/17)), so the CLI still runs from the `fleet.revision` clone in `scripts/dev/fleet.sh`. When a release is published, the workstation dependency becomes that npm version. The bucket is a cloud resource and changes go through OpenTofu first.
 
 ## Local development infra vs cloud app infra
 
 These are two separate domains. Never mix their commands, owners, credentials or docs.
 
-- **Local development infrastructure**: developer machines. mise toolchain, `packages/workstation`, the fleet (manager + Ubuntu workers), T3, the CLI proxy, Beszel agents, local Turborepo cache, disposable test containers. Owned by `mise.toml`/`mise.lock`, `packages/workstation` and dev-fleet (`fleet.json`, `fleet.revision`). Agent guide: `llms-local.txt` (`scripts/llms-local.template.md`).
+- **Local development infrastructure**: developer machines. mise toolchain, `packages/workstation`, the fleet (manager + Ubuntu workers), T3, the CLI proxy, Beszel agents, local Turborepo cache, disposable test containers. Owned by `mise.toml`/`mise.lock`, `packages/workstation` and homelab (`fleet.json`, `fleet.revision`). Agent guide: `llms-local.txt` (`scripts/llms-local.template.md`).
 - **Cloud app infrastructure**: OpenTofu resources apps use. Vault/OpenBao, PostgreSQL, R2, Railway services, GHCR images, DNS/TLS/tunnels, GitHub OIDC/rulesets, auth relay. Owned only by `packages/infra/tofu` (`bun run infra*`). Agent guide: `llms-cloud.txt` (`scripts/llms-cloud.template.md`).
 
 - `dev` is not local: the Vault `dev` config, `dev` bucket and `dev` `DATABASE_URL` are cloud resources.
@@ -71,8 +71,8 @@ Flat Turborepo + Bun workspace. All packages live under `packages/` and use `@pk
 - `packages/vault-service`: OpenBao runtime image and local read/auth CLI. Its infrastructure, schema, initialization, policies, auth and KV values are owned by OpenTofu.
 - `packages/9router`: upstream Railway service with ephemeral SQLite restored and replicated to shared R2 using Litestream. No persistent service volume.
 - `packages/zoomies`: official Zoomies GitHub Actions runner controller wrapper on Railway (`zoomies.chrisvouga.dev`) with a Railway volume for SQLite and built-in encrypted backups to shared R2; `bun run zoomies:configure` / `zoomies:join-token` drive the running controller's API. Read its `README.md` runbook.
-- `packages/workstation`: one person's portable dev-machine configuration (OpenCode, notifier, sounds, SSH/editor network setup). It imports platform and agent modules from the `@crvouga/dev-fleet` npm package and reads machines from `fleet.json`. Read its `AGENTS.md` before editing it. Install with `bun run personal:install`; converge local configuration with `personal workstation sync`.
-- `packages/personal-cli`: the source-only `personal` CLI (`infra-*`, `workstation`, `commands`). Read its `README.md` and `AGENTS.md`. `bun run personal` prints help; `commands --json` is the agent catalog. It has no fleet or T3 commands; dev-fleet supersedes them.
+- `packages/workstation`: one person's portable dev-machine configuration (OpenCode, notifier, sounds, SSH/editor network setup). It imports platform and agent modules from `@crvouga/homelab` (the commit in `fleet.revision`) and reads machines from `fleet.json`. Read its `AGENTS.md` before editing it. Install with `bun run personal:install`; converge local configuration with `personal workstation sync`.
+- `packages/personal-cli`: the source-only `personal` CLI (`infra-*`, `workstation`, `commands`). Read its `README.md` and `AGENTS.md`. `bun run personal` prints help; `commands --json` is the agent catalog. It has no fleet or T3 commands; homelab supersedes them.
 
 ## Shared authentication relay
 

@@ -12,8 +12,8 @@ updates:
       prefix: chore(deps)
     open-pull-requests-limit: 5
     ignore:
-      # The dev-fleet latest workflow pins the newest dev-fleet hourly.
-      - dependency-name: '@crvouga/dev-fleet'
+      # The homelab latest workflow pins the newest homelab hourly.
+      - dependency-name: '@crvouga/homelab'
       # typescript-eslint does not support TypeScript 7, and TS 7 drops the
       # compiler API scripts/iac-policy.test.ts uses. Lift this once
       # https://github.com/typescript-eslint/typescript-eslint/issues/10940 ships.

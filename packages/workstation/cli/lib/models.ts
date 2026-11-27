@@ -4,7 +4,7 @@ import { dirname, join } from 'node:path';
 import { VaultSecretStore } from '@pkgs/secret-store';
 import { VaultCli } from '@pkgs/vault';
 
-import type { Platform } from '@crvouga/dev-fleet/src/platform/types';
+import type { Platform } from '@crvouga/homelab/src/platform/types';
 import { resolveVaultConfig } from './vault-config';
 
 export type ModelEntry = {

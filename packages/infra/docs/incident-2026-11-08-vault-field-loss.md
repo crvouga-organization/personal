@@ -57,5 +57,5 @@ delete it afterwards. Never print values.
    saved plan with `-parallelism=1`.
 4. **Verify** `vault kv get -field=CLIPROXY_FLEET_CLIENT_API_KEY
 secret/personal/prd` exits 0 (discard output), the next **CLI proxy health
-   schedule** run passes, then run **Fleet: Sync**.
+   schedule** run passes, then run **Homelab: Sync**.
 5. Merge this branch through the normal PR/Check flow.

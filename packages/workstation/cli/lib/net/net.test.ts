@@ -1,13 +1,13 @@
 import { expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 
-import { launchdPlist } from '@crvouga/dev-fleet/src/platform/launchd';
-import { systemdUnits } from '@crvouga/dev-fleet/src/platform/systemd-user';
+import { launchdPlist } from '@crvouga/homelab/src/platform/launchd';
+import { systemdUnits } from '@crvouga/homelab/src/platform/systemd-user';
 import {
   diskCheck,
   healthChecks,
   parseProbe,
-} from '@crvouga/dev-fleet/src/machine-health';
+} from '@crvouga/homelab/src/machine-health';
 import { failureKeys, notificationFor } from './history';
 import {
   expandHome,

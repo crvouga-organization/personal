@@ -4,8 +4,8 @@ import { join } from 'node:path';
 
 import type { DoctorCheck } from '../doctor';
 import { workspaceRoot } from '../paths';
-import { networkProjection } from '@crvouga/dev-fleet/src/network-definition';
-import { parseDefinition } from '@crvouga/dev-fleet/src/definition';
+import { networkProjection } from '@crvouga/homelab/src/network-definition';
+import { parseDefinition } from '@crvouga/homelab/src/definition';
 
 export type NetHostOs = 'macOS' | 'linux' | 'windows';
 

@@ -11,10 +11,10 @@ operations. It runs from the checkout (`bun run personal …`, or the launcher
 | `commands`    | Command catalog plus the agent usage contract (`--json`) |
 
 Fleet machines, T3 provider instances and the CLI proxy are managed by
-[dev-fleet](https://github.com/crvouga/dev-fleet), not by this CLI. Run them
+[homelab](https://github.com/crvouga/homelab), not by this CLI. Run them
 from the checkout with `bash scripts/dev/project-action.sh fleet-sync`
-(also `fleet-preview`, `fleet-status`, `fleet-health`, `fleet-repair`,
-`infra-cliproxy`), or with `bun run fleet <command>`.
+(`homelab converge`; also `fleet-preview`, `fleet-status`, `fleet-health`,
+`fleet-repair`, `infra-cliproxy` for `proxy`), or with `bun run fleet <command>`.
 
 ```sh
 bun run personal                      # help

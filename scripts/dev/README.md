@@ -36,7 +36,7 @@ reused, never reset or implicitly pulled. From a checkout, run
 
 The scripts install checksum-verified mise **2026.10.24** unless that or a newer
 mise is already installed (a newer one is never downgraded: on a fleet machine it
-is dev-fleet's and its global config requires it), trust this repository's
+is homelab's and its global config requires it), trust this repository's
 configuration, install pinned Bun, install the shared tools with `--locked`, copy
 the managed global config/lock/sidecars, set up persistent shims on PATH, and run
 `bun install --frozen-lockfile`. Reopen your terminal/editor afterward. To refresh
@@ -271,10 +271,10 @@ without pulling or touching project dependencies; `personal workstation tools ch
 them. Sync is explicit; Git commits do not silently update other machines.
 
 Multiple development computers are kept in sync by
-[dev-fleet](https://github.com/crvouga/dev-fleet), run from this checkout at the
+[homelab](https://github.com/crvouga/homelab), run from this checkout at the
 pinned `fleet.revision` with `fleet.json` (see [T3 project actions](#t3-project-actions)).
-Fleet machines get their toolchain from dev-fleet's own pins, not from this file:
-when the global mise config carries dev-fleet's marker, setup installs this
+Fleet machines get their toolchain from homelab's own pins, not from this file:
+when the global mise config carries homelab's marker, setup installs this
 checkout's tools and leaves that global config unchanged.
 
 Remote Bash sessions depend on sshd sourcing
@@ -319,27 +319,30 @@ Actions: `warm`, `portfolio`, `workstation-sync`,
 `workstation-net-fix-check`, `fleet-sync`, `fleet-preview`, `fleet-status`,
 `fleet-health`, `fleet-repair`, `fleet-t3-status`, `infra-cliproxy`.
 Workstation actions run the `personal workstation` command of the same name. The
-fleet actions and `infra-cliproxy` run [dev-fleet](https://github.com/crvouga/dev-fleet)
+fleet actions and `infra-cliproxy` run [homelab](https://github.com/crvouga/homelab)
 at the commit pinned in `fleet.revision`, with this repository's `fleet.json`, through
-`scripts/dev/fleet.sh`. Label each T3 script `Domain: Command words` (`Fleet: Sync`,
-`Fleet: Preview`, `Fleet: Health`, `Workstation: Net check`, `Infra: Cliproxy model health`
+`scripts/dev/fleet.sh`. Label each T3 script `Domain: Command words` (`Homelab: Sync`,
+`Homelab: Preview`, `Homelab: Health`, `Workstation: Net check`, `Infra: Cliproxy model health`
 running `infra-cliproxy model-health`; `infra-cliproxy model-suite --target mock` is the
 offline, credential-free suite). Extra arguments such as `--json` are forwarded.
 
-| Fleet action      | Runs                                                                 | Changes machines     |
-| ----------------- | -------------------------------------------------------------------- | -------------------- |
-| `fleet-preview`   | `fleet-sync --dry-run`                                               | No                   |
-| `fleet-sync`      | `fleet-sync`: converges the manager, then every worker               | Yes                  |
-| `fleet-status`    | `fleet-status --workers`                                             | No                   |
-| `fleet-health`    | `fleet-status --workers`, `t3-status` and, on the manager, the proxy | No                   |
-| `fleet-repair`    | `fleet-repair --json`: a plan                                        | Only `--apply --yes` |
-| `fleet-t3-status` | `t3-status`: T3 provider drift on this machine                       | No                   |
+| Fleet action      | Runs homelab                                                | Changes machines     |
+| ----------------- | ----------------------------------------------------------- | -------------------- |
+| `fleet-preview`   | `converge --dry-run`                                        | No                   |
+| `fleet-sync`      | `converge`: the manager, then every worker                  | Yes                  |
+| `fleet-status`    | `check --workers`                                           | No                   |
+| `fleet-health`    | `check --workers`, `t3` and, on the manager, `proxy status` | No                   |
+| `fleet-repair`    | `repair --json`: a plan                                     | Only `--apply --yes` |
+| `fleet-t3-status` | `t3`: T3 provider drift on this machine                     | No                   |
 
-`bun run fleet:preview`, `fleet:sync`, `fleet:status`, `fleet:health`, `fleet:repair`
-and `fleet:t3` are the same commands as root scripts, and `bun run fleet <command>`
-runs any other dev-fleet command. `fleet-sync` runs on the manager; started on a
-worker it hands off to the manager over SSH. The other commands run from the checkout
-of the pinned revision that `fleet-sync` leaves on the machine. Fleet actions do not
+`infra-cliproxy` runs `proxy`. `bun run fleet:preview`, `fleet:sync`, `fleet:status`,
+`fleet:health`, `fleet:repair` and `fleet:t3` are the same commands as root scripts,
+and `bun run fleet <command>` runs any other homelab command (`converge-local`,
+`t3-reconcile`, `t3-remove`, `enroll`, `workers`, …). `converge` runs on the manager;
+started on a worker it hands off to the manager over SSH. The other commands run from
+the checkout of the pinned revision that `converge` leaves on the machine. `converge`,
+`converge-local`, `t3-reconcile` and `t3-remove` apply when invoked; only `--dry-run`
+previews. `converge --dry-run` does not publish the global mise config. Fleet actions do not
 run this repository's bootstrap. Every other action runs it first, reusing installed
 locked tools and converging dependencies for the current branch. `warm` performs
 only that setup. No global `ws` or `personal` launcher is required. Setup may

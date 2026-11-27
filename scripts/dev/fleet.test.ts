@@ -24,11 +24,11 @@ function git(cwd: string, args: string[], date?: string): string {
   return result.stdout.trim();
 }
 
-/** A dev-fleet source with an older and a newer commit; the machine runs `applied`. */
+/** A homelab source with an older and a newer commit; the machine runs `applied`. */
 function fleetSync(pin: 'older' | 'newer') {
   const home = mkdtempSync(join(tmpdir(), 'fleet-sync-'));
   try {
-    const source = join(home, '.local/share/dev-fleet/source');
+    const source = join(home, '.local/share/homelab/source');
     mkdirSync(join(source, 'bootstrap'), { recursive: true });
     git(source, ['init', '--quiet']);
     const commit = (label: string, date: string) => {
@@ -66,7 +66,7 @@ function fleetSync(pin: 'older' | 'newer') {
       join(root, 'fleet.json'),
       JSON.stringify({ source: { repository: source } })
     );
-    return spawnSync('sh', [join(root, 'scripts/dev/fleet.sh'), 'fleet-sync'], {
+    return spawnSync('sh', [join(root, 'scripts/dev/fleet.sh'), 'converge'], {
       encoding: 'utf8',
       env: { ...process.env, HOME: home },
     });
@@ -77,18 +77,15 @@ function fleetSync(pin: 'older' | 'newer') {
 
 const unix = test.skipIf(process.platform === 'win32');
 
-unix(
-  'fleet-sync refuses a pin older than the dev-fleet the machine runs',
-  () => {
-    // An older revision's bootstrap would replace the newer mise its global config requires.
-    const result = fleetSync('older');
-    expect(result.status).toBe(5);
-    expect(result.stdout).not.toContain('ran');
-    expect(result.stderr).toContain('git pull');
-  }
-);
+unix('converge refuses a pin older than the homelab the machine runs', () => {
+  // An older revision's bootstrap would replace the newer mise its global config requires.
+  const result = fleetSync('older');
+  expect(result.status).toBe(5);
+  expect(result.stdout).not.toContain('ran');
+  expect(result.stderr).toContain('git pull');
+});
 
-unix('fleet-sync runs a pin at or after the applied revision', () => {
+unix('converge runs a pin at or after the applied revision', () => {
   const result = fleetSync('newer');
   expect(result.status).toBe(0);
   expect(result.stdout.trim()).toBe('ran newer');

@@ -13,18 +13,18 @@ warm | portfolio | workstation-sync | workstation-update | workstation-net-fix |
   ;;
 esac
 export PATH="$HOME/.local/bin:$PATH"
-# Fleet actions run dev-fleet at the pinned revision (fleet.revision) with fleet.json.
-# They need no setup from this checkout: dev-fleet installs its own pinned toolchain
+# Fleet actions run homelab at the pinned revision (fleet.revision) with fleet.json.
+# They need no setup from this checkout: homelab installs its own pinned toolchain
 # on the machines it manages, and this repository's bootstrap must not replace it.
 case "$action" in
-fleet-sync) exec sh scripts/dev/fleet.sh fleet-sync "$@" ;;
-fleet-preview) exec sh scripts/dev/fleet.sh fleet-sync --dry-run "$@" ;;
-fleet-status) exec sh scripts/dev/fleet.sh fleet-status --workers "$@" ;;
+fleet-sync) exec sh scripts/dev/fleet.sh converge "$@" ;;
+fleet-preview) exec sh scripts/dev/fleet.sh converge --dry-run "$@" ;;
+fleet-status) exec sh scripts/dev/fleet.sh check --workers "$@" ;;
 fleet-health) exec sh scripts/dev/fleet-health.sh "$@" ;;
-fleet-repair) exec sh scripts/dev/fleet.sh fleet-repair --json "$@" ;;
-fleet-t3-status) exec sh scripts/dev/fleet.sh t3-status "$@" ;;
+fleet-repair) exec sh scripts/dev/fleet.sh repair --json "$@" ;;
+fleet-t3-status) exec sh scripts/dev/fleet.sh t3 "$@" ;;
 # Arguments choose the operation, for example `model-health`, `model-suite --target mock`, `status`.
-infra-cliproxy) exec sh scripts/dev/fleet.sh cliproxy "$@" ;;
+infra-cliproxy) exec sh scripts/dev/fleet.sh proxy "$@" ;;
 esac
 # The shared owner reuses installed locked tools and converges dependencies.
 # Run it on every invocation so branch/toolchain/lock changes cannot leave stale setup.

@@ -8,7 +8,7 @@ import { failCheck, passCheck, warnCheck } from './make-check';
 import {
   healthChecks,
   parseProbe,
-} from '@crvouga/dev-fleet/src/machine-health';
+} from '@crvouga/homelab/src/machine-health';
 import { expandHome, shortName, type NetHost } from './inventory';
 import { lastLine, run } from './run';
 import {
@@ -238,7 +238,7 @@ async function machineHealth(host: NetHost): Promise<Check[]> {
   if (host.os === 'windows') return [];
   const script = readFileSync(
     fileURLToPath(
-      import.meta.resolve('@crvouga/dev-fleet/ansible/net/remote-probe.sh')
+      import.meta.resolve('@crvouga/homelab/ansible/net/remote-probe.sh')
     ),
     'utf8'
   );

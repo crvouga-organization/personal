@@ -12,8 +12,11 @@ import { homedir } from 'node:os';
 
 const MARKER = '# Managed by crvouga/workspace scripts/dev/setup.ts\n';
 const MANAGED = /^# Managed by \S+ \S*setup\.ts\n/;
-/** dev-fleet publishes its own pinned toolchain config on every fleet-sync. */
-const FLEET_OWNED = /^# Managed by dev-fleet /;
+/** homelab publishes its own pinned toolchain config on every converge.
+ * A machine that has not converged since the rename still carries the
+ * dev-fleet marker; both belong to the fleet and must be left alone.
+ */
+const FLEET_OWNED = /^# Managed by (?:dev-fleet|homelab) /;
 export const workspaceRoot = join(import.meta.dirname, '../..');
 
 export function globalConfigDir(): string {
@@ -43,7 +46,7 @@ export function assertManagedConfig(dir: string): void {
 }
 
 /** False when the machine is in the fleet: its global config belongs to
- * dev-fleet and is left as fleet-sync published it. This checkout's pins still
+ * homelab and is left as converge published it. This checkout's pins still
  * apply inside the checkout, through its own mise.toml.
  */
 export function publishGlobalConfig(
