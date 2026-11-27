@@ -11,7 +11,7 @@
  *   bun run --filter @pkgs/workstation configure:opencode [--strict]
  */
 import '../cli/fleet-config-env';
-import { currentPlatform } from '@crvouga/dev-fleet/src/platform';
+import { currentPlatform } from '@crvouga/homelab/src/platform';
 import { syncProvidersFromVault } from '../cli/lib/providers-sync';
 
 async function main(): Promise<void> {

@@ -13,7 +13,7 @@ test('commands --json lists only infra, workstation and reference commands', asy
   expect(ids.some((id) => /^(fleet|t3)-|cliproxy/.test(id))).toBe(false);
 });
 
-test('fleet commands are gone: dev-fleet owns them', async () => {
+test('fleet commands are gone: homelab owns them', async () => {
   const outcome = await execute(['fleet-sync'], settings, '0.0.0');
   expect(outcome.exitCode).toBe(2);
 });

@@ -1,5 +1,5 @@
 import { converge } from './sync';
-import { currentPlatform } from '@crvouga/dev-fleet/src/platform';
+import { currentPlatform } from '@crvouga/homelab/src/platform';
 import type { GlobalOpts } from '../lib/cli-opts';
 import {
   muted,

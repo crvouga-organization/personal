@@ -46,7 +46,7 @@ bun run vault:edit           # interactive secret editor (--dry-run, --demo)
 
 ## Fleet
 
-Developer machines are managed by [dev-fleet](https://github.com/crvouga/dev-fleet); this repo holds only `fleet.json` and the pinned `fleet.revision`. Use `bun run fleet:preview`, `fleet:sync` and `fleet:health`.
+Developer machines are managed by [homelab](https://github.com/crvouga/homelab); this repo holds only `fleet.json` and the pinned `fleet.revision`. Use `bun run fleet:preview` (`converge --dry-run`), `fleet:sync` (`converge`) and `fleet:health`.
 
 ## Agent guides
 

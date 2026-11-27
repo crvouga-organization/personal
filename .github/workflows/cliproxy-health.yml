@@ -1,7 +1,7 @@
 name: CLI proxy health
-# Live health of this fleet's CLI proxy. The checks are dev-fleet's
+# Live health of this fleet's CLI proxy. The checks are homelab's
 # (cliproxy/scripts at the revision pinned in fleet.revision), run against this
-# repository's fleet.json; dev-fleet's own CI runs their offline contract tests.
+# repository's fleet.json; homelab's own CI runs their offline contract tests.
 # Deliberately cheap by default:
 #   03:41 daily   comprehensive suite (bounded by models.json budgets) plus the
 #                 free readiness checks (endpoint + cloud checkpoint freshness)
@@ -28,7 +28,7 @@ on:
         default: all
         options: [all, core, cursor]
       model:
-        description: Optional single model id from dev-fleet's cliproxy/models.json (partial runs never open or close the tracking issue).
+        description: Optional single model id from homelab's cliproxy/models.json (partial runs never open or close the tracking issue).
         type: string
         default: ''
       check:
@@ -49,8 +49,8 @@ concurrency:
   group: cliproxy-model-health-${{ github.event_name == 'workflow_dispatch' && inputs.profile || github.event.schedule }}
   cancel-in-progress: false
 env:
-  DEVFLEET_CONFIG: ${{ github.workspace }}/fleet.json
-  PROXY: dev-fleet/cliproxy/scripts
+  HOMELAB_CONFIG: ${{ github.workspace }}/fleet.json
+  PROXY: homelab/cliproxy/scripts
   PROFILE: ${{ github.event_name == 'workflow_dispatch' && inputs.profile || 'nightly' }}
 jobs:
   health:
@@ -63,15 +63,15 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - name: Read the pinned dev-fleet revision
+      - name: Read the pinned homelab revision
         id: pin
         run: echo "revision=$(tr -d '[:space:]' < fleet.revision)" >> "$GITHUB_OUTPUT"
-      - name: Check out dev-fleet at the pinned revision
+      - name: Check out homelab at the pinned revision
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          repository: crvouga/dev-fleet
+          repository: crvouga/homelab
           ref: ${{ steps.pin.outputs.revision }}
-          path: dev-fleet
+          path: homelab
           persist-credentials: false
       - name: Install read-only backup client
         if: env.PROFILE == 'readiness' || github.event_name == 'schedule'

@@ -33,8 +33,8 @@ test('legacy domain tasks forward to personal rather than independent CLIs', () 
   for (const name of ['password-manager', 'health', 'health:fix', 'domains']) {
     expect(scripts[name]).toStartWith('bun run personal ');
   }
-  // Fleet tasks run dev-fleet at the pinned revision (or move the pins to the
-  // latest dev-fleet), not personal.
+  // Fleet tasks run homelab at the pinned revision (or move the pins to the
+  // latest homelab), not personal.
   for (const name of Object.keys(scripts).filter(
     (name) => name === 'cliproxy' || /^fleet(:|$)/.test(name)
   ))

@@ -1,27 +1,28 @@
-name: dev-fleet latest
-# This repository always runs the latest dev-fleet. Hourly, move fleet.revision
-# to dev-fleet's head and @crvouga/dev-fleet to its npm `latest` tag
-# (scripts/dev/fleet-latest.sh) and open a self-merging PR, so the pins never
-# lag by more than an hour plus CI. dev-fleet releases several times a day, so
+name: homelab latest
+# This repository always runs the latest homelab. Hourly, move fleet.revision
+# to homelab's head and @crvouga/homelab to that same commit (a git dependency
+# until the package is on npm, then the npm `latest` tag;
+# scripts/dev/fleet-latest.sh) and open a self-merging PR, so the pins never
+# lag by more than an hour plus CI. homelab changes several times a day, so
 # Dependabot's weekly run is too slow and ignores this package.
 on:
   schedule:
     - cron: '7 * * * *'
   repository_dispatch:
-    types: [dev-fleet-released]
+    types: [homelab-released]
   workflow_dispatch: {}
 permissions:
   contents: read
 concurrency:
-  group: dev-fleet-latest
+  group: homelab-latest
   cancel-in-progress: false
 jobs:
   bump:
-    name: Pin the latest dev-fleet
+    name: Pin the latest homelab
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      BRANCH: agent/dev-fleet-latest
+      BRANCH: agent/homelab-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -30,7 +31,7 @@ jobs:
           # PR would never get required checks. Use the PAT.
           token: ${{ secrets.DEPLOY_DISPATCH_TOKEN }}
       - uses: ./.github/actions/setup
-      - name: Move the pins to the latest dev-fleet
+      - name: Move the pins to the latest homelab
         run: sh scripts/dev/fleet-latest.sh
       - name: Open a self-merging PR
         env:
@@ -40,12 +41,12 @@ jobs:
           files='fleet.revision packages/workstation/package.json bun.lock'
           # shellcheck disable=SC2086
           if [ -z "$(git status --porcelain -- $files)" ]; then
-            echo 'dev-fleet pins are current.'
+            echo 'homelab pins are current.'
             exit 0
           fi
-          version=$(sed -n 's|.*"@crvouga/dev-fleet": *"\([^"]*\)".*|\1|p' packages/workstation/package.json)
+          version=$(sed -n 's|.*"@crvouga/homelab": *"\([^"]*\)".*|\1|p' packages/workstation/package.json)
           revision=$(cut -c1-12 fleet.revision)
-          title="chore(deps): pin the latest dev-fleet ($version, $revision)"
+          title="chore(deps): pin the latest homelab ($version, $revision)"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git checkout -B "$BRANCH"
@@ -55,7 +56,7 @@ jobs:
           git push --force origin "$BRANCH"
           if [ -z "$(gh pr list --head "$BRANCH" --state open --json number --jq '.[].number')" ]; then
             gh pr create --base main --head "$BRANCH" --label deps --title "$title" \
-              --body 'Automated: moves `fleet.revision` to the head of dev-fleet and `@crvouga/dev-fleet` to its npm `latest` tag (`scripts/dev/fleet-latest.sh`). Opened by the dev-fleet latest workflow; merges itself when Check passes.'
+              --body 'Automated: moves `fleet.revision` to the head of homelab and `@crvouga/homelab` to that same commit, or to the npm `latest` tag once the package is published (`scripts/dev/fleet-latest.sh`). Opened by the homelab latest workflow; merges itself when Check passes.'
           else
             gh pr edit "$BRANCH" --title "$title"
           fi

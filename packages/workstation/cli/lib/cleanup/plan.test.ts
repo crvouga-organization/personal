@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 
-import { parsePsOutput } from '@crvouga/dev-fleet/src/platform/ps';
-import type { ProcessInfo } from '@crvouga/dev-fleet/src/platform/types';
+import { parsePsOutput } from '@crvouga/homelab/src/platform/ps';
+import type { ProcessInfo } from '@crvouga/homelab/src/platform/types';
 import { planCleanup, type CleanupOptions } from './plan';
 
 const UID = 501;

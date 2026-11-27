@@ -1,4 +1,4 @@
-import type { ProcessInfo } from '@crvouga/dev-fleet/src/platform/types';
+import type { ProcessInfo } from '@crvouga/homelab/src/platform/types';
 
 /**
  * Kill process trees without letting them respawn:

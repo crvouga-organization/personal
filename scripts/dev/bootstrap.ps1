@@ -31,7 +31,7 @@ $Temp = Join-Path ([IO.Path]::GetTempPath()) ([Guid]::NewGuid().ToString())
 New-Item -ItemType Directory -Path $Temp | Out-Null
 $Bin = "$HOME\.local\bin"
 # $MiseVersion is the minimum and the version installed when mise is missing or
-# older. A newer mise is kept: on a fleet machine dev-fleet owns it and its
+# older. A newer mise is kept: on a fleet machine homelab owns it and its
 # global config may require that newer version.
 $MiseIsCurrent = $false
 if (Test-Path "$Bin\mise.exe") {

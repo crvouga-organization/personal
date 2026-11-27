@@ -1,11 +1,11 @@
 {
-  "$schema": "https://raw.githubusercontent.com/crvouga/dev-fleet/main/schema/fleet.schema.json",
+  "$schema": "https://raw.githubusercontent.com/crvouga/homelab/main/schema/fleet.schema.json",
   "version": 3,
   "storage": {
     "disposable": true
   },
   "source": {
-    "repository": "https://github.com/crvouga/dev-fleet.git"
+    "repository": "https://github.com/crvouga/homelab.git"
   },
   "secrets": {
     "provider": "vault",

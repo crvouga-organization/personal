@@ -10,7 +10,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-test('fleet actions run dev-fleet through the pinned wrapper and forward preview flags', () => {
+test('fleet actions run homelab through the pinned wrapper and forward preview flags', () => {
   const root = mkdtempSync(join(tmpdir(), 'project-action-'));
   try {
     mkdirSync(join(root, 'scripts/dev'), { recursive: true });
@@ -37,10 +37,7 @@ test('fleet actions run dev-fleet through the pinned wrapper and forward preview
       }
     );
     expect(result.status).toBe(0);
-    expect(result.stdout.trim().split('\n')).toEqual([
-      'fleet-sync',
-      '--dry-run',
-    ]);
+    expect(result.stdout.trim().split('\n')).toEqual(['converge', '--dry-run']);
     const preview = spawnSync(
       'bash',
       ['scripts/dev/project-action.sh', 'fleet-preview', '--json'],
@@ -51,7 +48,7 @@ test('fleet actions run dev-fleet through the pinned wrapper and forward preview
       }
     );
     expect(preview.stdout.trim().split('\n')).toEqual([
-      'fleet-sync',
+      'converge',
       '--dry-run',
       '--json',
     ]);
@@ -66,7 +63,7 @@ test('the wrapper runs the manager entry of the pinned revision with this fleet.
   try {
     mkdirSync(join(root, 'scripts/dev'), { recursive: true });
     mkdirSync(join(root, 'bin'));
-    mkdirSync(join(root, '.local/share/dev-fleet/source/.git'), {
+    mkdirSync(join(root, '.local/share/homelab/source/.git'), {
       recursive: true,
     });
     writeFileSync(
@@ -86,7 +83,7 @@ test('the wrapper runs the manager entry of the pinned revision with this fleet.
     // it was given.
     writeFileSync(
       join(root, 'bin/git'),
-      `#!/bin/sh\ncase "$*" in *show*) printf '%s\\n' 'printf "%s\\n" "$DEVFLEET_CONFIG" "$@"';; esac\nexit 0\n`,
+      `#!/bin/sh\ncase "$*" in *show*) printf '%s\\n' 'printf "%s\\n" "$HOMELAB_CONFIG" "$@"';; esac\nexit 0\n`,
       { mode: 0o755 }
     );
     const run = (...args: string[]) =>
@@ -99,16 +96,16 @@ test('the wrapper runs the manager entry of the pinned revision with this fleet.
           PATH: `${join(root, 'bin')}:/usr/bin:/bin`,
         },
       });
-    const sync = run('fleet-sync', '--dry-run');
+    const sync = run('converge', '--dry-run');
     expect(sync.status).toBe(0);
     expect(sync.stdout.trim().split('\n')).toEqual([
       expect.stringMatching(/fleet\.json$/),
       sha,
       '--dry-run',
     ]);
-    // Other commands need a checkout fleet-sync prepared: the manager's run
+    // Other commands need a checkout converge prepared: the manager's run
     // checkout, or the revision applied on a worker.
-    expect(run('fleet-status').status).toBe(3);
+    expect(run('check').status).toBe(3);
     const applied = join(root, '.local/share/personal/fleet/revisions', sha);
     mkdirSync(join(applied, 'node_modules'), { recursive: true });
     writeFileSync(
@@ -116,20 +113,20 @@ test('the wrapper runs the manager entry of the pinned revision with this fleet.
       '#!/bin/sh\nprintf "%s\\n" "$PWD" "$*"\n',
       { mode: 0o755 }
     );
-    const status = run('fleet-status', '--workers');
+    const status = run('check', '--workers');
     expect(status.status).toBe(0);
     expect(status.stdout.trim().split('\n')).toEqual([
       applied,
-      'exec --locked bun -- bun src/cli/cli.ts fleet-status --workers',
+      'exec --locked bun -- bun src/cli/cli.ts check --workers',
     ]);
     writeFileSync(join(root, 'fleet.revision'), 'main\n');
-    expect(run('fleet-sync').status).toBe(2);
+    expect(run('converge').status).toBe(2);
   } finally {
     rmSync(root, { recursive: true, force: true });
   }
 });
 
-test('project actions are documented, and fleet actions go to dev-fleet', () => {
+test('project actions are documented, and fleet actions go to homelab', () => {
   const script = readFileSync(
     join(import.meta.dir, 'dev/project-action.sh'),
     'utf8'
@@ -165,18 +162,13 @@ test('fleet health runs every read-only check and fails when one does', () => {
     const healthy = run('#!/bin/sh\necho "$*"\n');
     expect(healthy.status).toBe(0);
     const commands = healthy.stdout.trim().split('\n');
-    expect(commands.slice(0, 2)).toEqual([
-      'fleet-status --workers',
-      't3-status',
-    ]);
+    expect(commands.slice(0, 2)).toEqual(['check --workers', 't3']);
     // Nothing that changes a machine.
     for (const command of commands)
-      expect(command).toMatch(/^(fleet-status|t3-status|cliproxy status)/);
-    const failing = run(
-      '#!/bin/sh\necho "$*"\n[ "$1" != fleet-status ] || exit 1\n'
-    );
+      expect(command).toMatch(/^(check --workers|t3|proxy status)$/);
+    const failing = run('#!/bin/sh\necho "$*"\n[ "$1" != check ] || exit 1\n');
     expect(failing.status).toBe(1);
-    expect(failing.stdout).toContain('t3-status');
+    expect(failing.stdout).toContain('\nt3');
     expect(failing.stderr).toContain('Failing: workers');
   } finally {
     rmSync(root, { recursive: true, force: true });

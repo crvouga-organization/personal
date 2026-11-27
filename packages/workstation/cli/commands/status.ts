@@ -12,7 +12,7 @@ import {
   listProviders,
   loadConfig,
 } from '../lib/opencode-config';
-import type { Platform } from '@crvouga/dev-fleet/src/platform/types';
+import type { Platform } from '@crvouga/homelab/src/platform/types';
 import { isTuiPluginRegistered, tuiConfigPath } from '../lib/tui-config';
 import { workstationRoot, workstationVersion } from '../lib/paths';
 import { resolveVaultConfig } from '../lib/vault-config';

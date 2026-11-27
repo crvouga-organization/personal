@@ -11,12 +11,12 @@ Canonical deployed URL: {{localGuideUrl}} · Index of both guides: {{siteGuideUr
 | Question | Local (this guide) | Cloud (the other guide) |
 | --- | --- | --- |
 | Where does it run? | A developer's computer or a fleet node | Railway, Cloudflare, managed PostgreSQL, GHCR, GitHub Actions |
-| Who owns it? | mise (`mise.toml`, `mise.lock`), `packages/workstation`, [dev-fleet](https://github.com/crvouga/dev-fleet) with this repository's `fleet.json` | OpenTofu in `{{infraRepo}}` only |
+| Who owns it? | mise (`mise.toml`, `mise.lock`), `packages/workstation`, [homelab](https://github.com/crvouga/homelab) with this repository's `fleet.json` | OpenTofu in `{{infraRepo}}` only |
 | How is it changed? | The documented local commands below, when the user asks for machine setup | A GitHub issue on `{{infraRepo}}`, then a reviewed OpenTofu PR |
 
 Rules:
 
-- **Nothing here provisions or changes a cloud resource.** Machine setup, `fleet-sync`, workstation sync and the AI proxy never create, deploy or reconfigure Vault, databases, buckets, DNS or Railway services. If a local task seems to need one, it is a cloud request: use {{cloudGuideUrl}}.
+- **Nothing here provisions or changes a cloud resource.** Machine setup, `converge`, workstation sync and the AI proxy never create, deploy or reconfigure Vault, databases, buckets, DNS or Railway services. If a local task seems to need one, it is a cloud request: use {{cloudGuideUrl}}.
 - **Machines consume cloud credentials; they do not own them.** A fleet node's Vault login, the AI proxy's encrypted R2 backup and its recovery keys in Vault are reads from cloud infrastructure. The Vault server, its policies, tokens and buckets stay OpenTofu-owned and are documented only in the cloud guide.
 - **`dev` does not mean local.** The Vault `dev` config, the `dev` bucket and the `dev` `DATABASE_URL` are cloud resources. "Local" in this guide means *runs on this computer*.
 - **A developer machine is never a hosting target**, and a fleet node is never an app server. Apps are hosted only through the cloud guide.
@@ -40,41 +40,45 @@ the agent catalog. See {{path:packages/personal-cli/README.md}}.
 
 ---
 
-## Developer fleet and private AI proxy (dev-fleet)
+## Developer fleet and private AI proxy (homelab)
 
 The fleet (one macOS manager, stateless Ubuntu workers), T3 provider instances,
 Beszel monitoring and the private CLIProxyAPI service are managed by
-[dev-fleet](https://github.com/crvouga/dev-fleet); none of that code lives here.
+[homelab](https://github.com/crvouga/homelab); none of that code lives here.
 This repository holds only this fleet's configuration, {{path:fleet.json}}, and the
-dev-fleet commit it runs, {{path:fleet.revision}}. From the checkout:
+homelab commit it runs, {{path:fleet.revision}}. From the checkout:
 
 ```sh
-bun run fleet:preview        # fleet-sync --dry-run: what a sync would change
-bun run fleet:sync           # converge the manager and every worker
-bun run fleet:health         # read-only: workers, T3 providers and, on the manager, the proxy
-bun run fleet:repair         # preview repairs; --apply --yes executes them
-bun run fleet <command>      # any other dev-fleet command, for example t3-apply --dry-run
+bun run fleet:preview        # homelab converge --dry-run: what a sync would change
+bun run fleet:sync           # homelab converge: the manager, then every worker
+bun run fleet:health         # read-only: check --workers, t3 and, on the manager, proxy status
+bun run fleet:repair         # homelab repair: a plan; --apply --yes executes it
+bun run fleet <command>      # any other homelab command, for example t3-reconcile --dry-run
 bun run fleet:commands       # the command catalog and agent contract
-bun run cliproxy help        # the proxy's operations
+bun run cliproxy help        # homelab proxy help
 ```
 
 The same commands are T3 project actions (`bash scripts/dev/project-action.sh
 fleet-preview | fleet-sync | fleet-status | fleet-health | fleet-repair |
-fleet-t3-status`). `fleet-sync` runs on the manager; started on a worker it hands
-off to the manager over SSH. `fleet-sync`, `fleet-node-sync`, `t3-apply` and
-`t3-cleanup` apply when invoked: only `--dry-run` previews.
+fleet-t3-status | infra-cliproxy`). `fleet-sync` runs `converge` on the manager;
+started on a worker it hands off to the manager over SSH. `converge`,
+`converge-local`, `t3-reconcile` and `t3-remove` apply when invoked: only
+`--dry-run` previews. `repair` previews until `--apply --yes`. `converge --dry-run`
+does not publish the global mise config.
 
-Never edit dev-fleet, a checkout it owns or a file it manages on a machine. A
+Never edit homelab, a checkout it owns or a file it manages on a machine. A
 defect or a missing feature is an issue at
-https://github.com/crvouga/dev-fleet/issues, without credentials, hostnames,
+https://github.com/crvouga/homelab/issues, without credentials, hostnames,
 accounts, domains or `fleet.json` contents.
 
-This repository always runs the latest dev-fleet: `fleet.revision` is dev-fleet's
-head and `@crvouga/dev-fleet` its npm `latest`. The dev-fleet latest workflow
-moves both hourly and auto-merges; `bun run fleet:latest` does it locally. Never
-pin an older dev-fleet.
+This repository always runs the latest homelab. `fleet.revision` is the head of
+homelab's default branch, and `@crvouga/homelab` is a git dependency of that
+same commit until the package is on npm, then the npm `latest` tag. The homelab
+latest workflow moves the pins hourly and auto-merges; `bun run fleet:latest`
+does it locally. Never pin an older homelab. `fleet.json` `state.prefix` stays
+`dev-fleet`: it is the live bucket key.
 
-Change fleet behaviour in dev-fleet; the pins pick it up. Change machines,
+Change fleet behaviour in homelab; the pins pick it up. Change machines,
 endpoints or secret locations in `fleet.json`. The proxy runs only on the fleet
 manager; it is not a hosted app and is never deployed to Railway. The cloud pieces
 it uses (its Cloudflare tunnel hostname, its Vault keys and the encrypted R2 backup

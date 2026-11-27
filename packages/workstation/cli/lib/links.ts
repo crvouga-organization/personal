@@ -7,7 +7,7 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 
-import type { Platform } from '@crvouga/dev-fleet/src/platform/types';
+import type { Platform } from '@crvouga/homelab/src/platform/types';
 
 export type ManagedLink = {
   label: string;
@@ -80,7 +80,7 @@ export function describeLink(managed: ManagedLink): LinkStatus {
 const REVISION_ROOT =
   /^(.*\/\.local\/share\/personal\/fleet\/revisions\/)[0-9a-f]{40}(\/packages\/workstation\/.+)$/;
 
-/** fleet-sync deploys each approved revision to its own directory; a link into a
+/** converge deploys each approved revision to its own directory; a link into a
  * previous revision of the same managed file is ours to move, not a conflict.
  */
 export function staleRevisionTarget(current: string, target: string): boolean {

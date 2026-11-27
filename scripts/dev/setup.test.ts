@@ -179,7 +179,7 @@ test('every base tool has locked artifacts for every supported OS/architecture',
   }
 });
 
-test('a global config published by dev-fleet is left as the fleet published it', async () => {
+test('a global config published by homelab is left as the fleet published it', async () => {
   const { mkdtempSync, mkdirSync, writeFileSync, rmSync } =
     await import('node:fs');
   const { tmpdir } = await import('node:os');
@@ -187,18 +187,23 @@ test('a global config published by dev-fleet is left as the fleet published it',
   const temp = mkdtempSync(join(tmpdir(), 'personal-mise-'));
   const dir = join(temp, 'global');
   const source = join(temp, 'source');
-  const fleet = '# Managed by dev-fleet bootstrap/setup.ts\n[tools]\n';
+  const markers = [
+    '# Managed by homelab bootstrap/setup.ts\n[tools]\n',
+    '# Managed by dev-fleet bootstrap/setup.ts\n[tools]\n',
+  ];
   try {
     mkdirSync(dir);
     mkdirSync(source);
     writeFileSync(join(source, 'mise.toml'), '[tools]\nbun = "1.4.4"\n');
     writeFileSync(join(source, 'mise.lock'), 'fixture lock');
-    writeFileSync(join(dir, 'config.toml'), fleet);
-    writeFileSync(join(dir, 'mise.lock'), 'fleet lock');
-    expect(() => assertManagedConfig(dir)).not.toThrow();
-    expect(publishGlobalConfig(dir, source)).toBe(false);
-    expect(readFileSync(join(dir, 'config.toml'), 'utf8')).toBe(fleet);
-    expect(readFileSync(join(dir, 'mise.lock'), 'utf8')).toBe('fleet lock');
+    for (const fleet of markers) {
+      writeFileSync(join(dir, 'config.toml'), fleet);
+      writeFileSync(join(dir, 'mise.lock'), 'fleet lock');
+      expect(() => assertManagedConfig(dir)).not.toThrow();
+      expect(publishGlobalConfig(dir, source)).toBe(false);
+      expect(readFileSync(join(dir, 'config.toml'), 'utf8')).toBe(fleet);
+      expect(readFileSync(join(dir, 'mise.lock'), 'utf8')).toBe('fleet lock');
+    }
     writeFileSync(join(dir, 'config.toml'), '[tools]\nnode = "22"\n');
     expect(() => assertManagedConfig(dir)).toThrow();
   } finally {

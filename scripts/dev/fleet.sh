@@ -1,9 +1,9 @@
 #!/bin/sh
-# Runs a dev-fleet command at the pinned revision (fleet.revision) with this
+# Runs a homelab command at the pinned revision (fleet.revision) with this
 # repository's fleet.json. The fleet code lives in the repository that
 # fleet.json names under source.repository; nothing of it is copied here.
-# The pin is a commit, not the npm version dev-fleet documents, until a release
-# names its commit: https://github.com/crvouga/dev-fleet/issues/17
+# The pin is a commit. @crvouga/homelab is not on npm yet, so the CLI runs
+# from this clone: https://github.com/crvouga/homelab/issues/17
 set -eu
 root=$(cd "$(dirname "$0")/../.." && pwd)
 revision=$(tr -d '[:space:]' <"$root/fleet.revision")
@@ -11,23 +11,23 @@ case "$revision" in *[!a-f0-9]*|'') echo 'fleet.revision must hold a full commit
 [ "${#revision}" = 40 ] || { echo 'fleet.revision must hold a full commit SHA.' >&2; exit 2; }
 repository=$(sed -n 's/.*"repository": *"\([^"]*\)".*/\1/p' "$root/fleet.json" | head -n 1)
 [ -n "$repository" ] || { echo 'fleet.json names no source.repository.' >&2; exit 2; }
-source="$HOME/.local/share/dev-fleet/source"
+source="$HOME/.local/share/homelab/source"
 if [ ! -d "$source/.git" ]; then
   mkdir -p "$(dirname "$source")"
   git clone --quiet "$repository" "$source"
 fi
 git -C "$source" cat-file -e "$revision^{commit}" 2>/dev/null || git -C "$source" fetch --quiet origin
-git -C "$source" cat-file -e "$revision^{commit}" 2>/dev/null || { echo "dev-fleet revision $revision is not in $repository." >&2; exit 4; }
-export DEVFLEET_REPO="$source" DEVFLEET_CONFIG="$root/fleet.json"
+git -C "$source" cat-file -e "$revision^{commit}" 2>/dev/null || { echo "homelab revision $revision is not in $repository." >&2; exit 4; }
+export HOMELAB_REPO="$source" HOMELAB_CONFIG="$root/fleet.json"
 command=${1:?Usage: fleet.sh COMMAND [ARGS]}
 shift
 fleet="$HOME/.local/share/personal/fleet"
-if [ "$command" = fleet-sync ]; then
-  # Never move a machine back to an older dev-fleet. A stale checkout pins an
+if [ "$command" = converge ]; then
+  # Never move a machine back to an older homelab. A stale checkout pins an
   # older revision, and its bootstrap installs that revision's mise over the
   # newer one the global config requires, which breaks every mise command on
-  # the machine (claude, t3 and fleet-sync included). Compared by commit date,
-  # since dev-fleet's history may be rewritten.
+  # the machine (claude, t3 and converge included). Compared by commit date,
+  # since homelab's history may be rewritten.
   applied_at=''
   if [ -e "$fleet/current/.git" ]; then
     applied_at=$(git -C "$fleet/current" show -s --format=%ct HEAD 2>/dev/null || true)
@@ -35,7 +35,7 @@ if [ "$command" = fleet-sync ]; then
   pinned_at=$(git -C "$source" show -s --format=%ct "$revision")
   if [ -n "$applied_at" ] && [ "$pinned_at" -lt "$applied_at" ]; then
     applied=$(git -C "$fleet/current" rev-parse HEAD)
-    echo "This checkout pins dev-fleet $revision, older than $applied, which this machine already runs." >&2
+    echo "This checkout pins homelab $revision, older than $applied, which this machine already runs." >&2
     echo "Update the checkout (git pull on main, or merge origin/main into this branch), then rerun." >&2
     exit 5
   fi
@@ -43,7 +43,7 @@ if [ "$command" = fleet-sync ]; then
   exec sh -c "$(git -C "$source" show "$revision:bootstrap/fleet-manager-run.sh")" fleet-manager-run "$revision" "$@"
 fi
 # Every other command runs from a checkout of the pinned revision that
-# fleet-sync prepared: the manager's run checkout, or the one applied on a worker.
+# converge prepared: the manager's run checkout, or the one applied on a worker.
 checkout=''
 for candidate in "$fleet/manager-runs/$revision" "$fleet/revisions/$revision"; do
   if [ -d "$candidate/node_modules" ]; then
@@ -51,7 +51,7 @@ for candidate in "$fleet/manager-runs/$revision" "$fleet/revisions/$revision"; d
     break
   fi
 done
-[ -n "$checkout" ] || { echo "This machine has no dev-fleet checkout at $revision. Run fleet-sync first; it prepares one." >&2; exit 3; }
+[ -n "$checkout" ] || { echo "This machine has no homelab checkout at $revision. Run bun run fleet:sync first; it prepares one." >&2; exit 3; }
 cd "$checkout"
 export PERSONAL_WORKSPACE="$checkout"
 exec mise exec --locked bun -- bun src/cli/cli.ts "$command" "$@"

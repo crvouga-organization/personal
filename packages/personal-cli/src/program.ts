@@ -58,7 +58,7 @@ function createProgram(
       '',
       `Release: ${releaseLabel(release)}`,
       'Groups: infra-* platform operations from the checkout · workstation this machine.',
-      'Fleet machines, T3 and the CLI proxy are managed by dev-fleet: bash scripts/dev/project-action.sh fleet-sync.',
+      'Fleet machines, T3 and the CLI proxy are managed by homelab: bash scripts/dev/project-action.sh fleet-sync.',
       'Agents: personal commands --json.',
     ].join('\n')
   );
