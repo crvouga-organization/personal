@@ -5,10 +5,7 @@ import { Socket } from 'node:net';
 
 import type { DoctorCheck } from '../doctor';
 import { failCheck, passCheck, warnCheck } from './make-check';
-import {
-  healthChecks,
-  parseProbe,
-} from '@crvouga/homelab/src/machine-health';
+import { healthChecks, parseProbe } from '@crvouga/homelab/src/machine-health';
 import { expandHome, shortName, type NetHost } from './inventory';
 import { lastLine, run } from './run';
 import {
