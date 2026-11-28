@@ -16,7 +16,7 @@
     "test": "bun test"
   },
   "dependencies": {
-    "@crvouga/homelab": "github:crvouga/homelab#1bf7c07586f2fe5d89fbd58683e82c6221438316",
+    "@crvouga/homelab": "0.23.1",
     "@inquirer/prompts": "catalog:",
     "@opencode-ai/plugin": "1.19.6",
     "@pkgs/assert": "workspace:*",
