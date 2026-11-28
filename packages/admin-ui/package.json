@@ -19,14 +19,14 @@
   "dependencies": {
     "@mantine/core": "^9.8.2",
     "@mantine/hooks": "^9.8.2",
-    "@tabler/icons-react": "^3.52.0",
+    "@tabler/icons-react": "^3.53.0",
     "get-nonce": "^1.0.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
   "devDependencies": {
     "@types/bun": "catalog:",
-    "@types/react": "^19.3.0",
+    "@types/react": "^19.3.1",
     "@types/react-dom": "^19.3.0",
     "typescript": "catalog:"
   }
