@@ -256,7 +256,7 @@
       "name": "@pkgs/workstation",
       "version": "0.0.0",
       "dependencies": {
-        "@crvouga/homelab": "github:crvouga/homelab#1bf7c07586f2fe5d89fbd58683e82c6221438316",
+        "@crvouga/homelab": "0.23.1",
         "@inquirer/prompts": "catalog:",
         "@opencode-ai/plugin": "1.19.6",
         "@pkgs/assert": "workspace:*",
@@ -468,7 +468,7 @@
 
     "@conventional-changelog/template": ["@conventional-changelog/template@1.4.0", "", {}, "sha512-aalGyl7dbB5PArRebDIX43ZvBlXrYm9uWzGJ26t+4SzJVPsOuvfILGGbw5X4yX7i50YEmJ8zvbiWnqH/AAnZqg=="],
 
-    "@crvouga/homelab": ["@crvouga/homelab@github:crvouga/homelab#1bf7c07", { "dependencies": { "@inquirer/prompts": "8.8.1", "boxen": "9.0.0", "bun": "1.4.5", "chalk": "6.0.1", "cli-table3": "0.6.5", "commander": "15.1.0", "fuse.js": "7.5.0", "ora": "10.0.0", "yaml": "^2.8.0" }, "bin": { "homelab": "./bin/homelab.mjs" } }, "crvouga-homelab-1bf7c07", "sha512-61GMeRXUOkBg9PII7dfde3DRa3/siScOKe6+C6cI0a9K4qM6794IiD8fWt/mWBHoLN/4tzWYktQPUCBuPQ2ngg=="],
+    "@crvouga/homelab": ["@crvouga/homelab@0.23.1", "", { "dependencies": { "@inquirer/prompts": "8.8.1", "boxen": "9.0.0", "bun": "1.4.5", "chalk": "6.0.1", "cli-table3": "0.6.5", "commander": "15.1.0", "fuse.js": "7.5.0", "ora": "10.0.0", "yaml": "^2.8.0" }, "bin": { "homelab": "bin/homelab.mjs" } }, "sha512-7aMLQTUjEwCdFtJHNOo6HYiWJPDKawDJ7f/W/z/MqRk7tJBAJVZj8TZoRgmSMu3sx0ppILuOv5xulkjnpPEiSw=="],
 
     "@crvouga/personal": ["@crvouga/personal@workspace:packages/personal-cli"],
 
